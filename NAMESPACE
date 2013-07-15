@@ -1,0 +1,3 @@
+useDynLib(coneproj)
+export("coneA","coneB","qprog","constreg","shapereg")
+

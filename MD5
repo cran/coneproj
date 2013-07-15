@@ -1,0 +1,17 @@
+ee61e84085339340328eca96a6ec0d11 *DESCRIPTION
+0172788a75912fe1e1542d5acaf0a5a4 *NAMESPACE
+13a49a8180b47b0e1117c3f3a24d9af6 *R/coneproj.R
+6c47022af5f00352baf82f954b97620c *data/FEV.rda
+4355ceabc8055a2a009d05e7486da496 *data/cubic.rda
+2ea3092f3e46ae944e976bab4aa7644d *data/feet.rda
+81a14ec4b50bbef7eae9cb20d01f26ef *man/FEV.Rd
+11252196353d394059b424e0a46d4d91 *man/coneA.Rd
+e0b6c61fb95995684722519954653bea *man/coneB.Rd
+6213d9cc63d47b7b7a474d4dcd1a1b2b *man/constreg.Rd
+89d082c1fbb5027055c6c55d975676d4 *man/cubic.Rd
+abbc1ab67cbc3ef373215aba72ec6a05 *man/feet.Rd
+65ebe03349a98a88e168ca0208bef402 *man/qprog.Rd
+823a3277b9e0c0f6bf818433f818ecda *man/shapereg.Rd
+489b262d4f81136a32f0bb09936fe53e *src/Makevars
+a2762b0003a9dd97f0904dc84fb72563 *src/Makevars.win
+cdef75ed320a6fa903a3cb70a301632c *src/coneproj.cpp
