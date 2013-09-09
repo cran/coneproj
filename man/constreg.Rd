@@ -7,25 +7,26 @@ The least-squares regression model \eqn{y = X\beta + \epsilon} is considered, wh
 \eqn{||y - X\beta||^2}, subject to \eqn{A\beta \ge 0}.  }
 
 \usage{
-constreg(y, xmat, amat, test = FALSE)
+constreg(y, xmat, amat, w = NULL, test = FALSE)
 }
 
 \arguments{
   \item{y}{A vector of length \eqn{n}.}
   \item{xmat}{A full column-rank design matrix. The column number of xmat must equal the length of \eqn{\beta}.}
   \item{amat}{A constraint matrix. The rows of amat must be irreducible. The column number of amat must equal the length of \eqn{\beta}.}
+ \item{w}{An optional nonnegative vector of weights of length \eqn{n}. If w is not given, all weights are taken to equal 1. Otherwise, the minimization of \eqn{(y - X\beta)'w(y - X\beta)} over \eqn{C} is returned. The default is w = NULL.}
   \item{test}{A logical scalar. If test == TRUE, then the p-value for the test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is returned. \eqn{C} is the constraint cone of the form \eqn{\{\beta: A\beta \ge 0\}}, and \eqn{V} is the null space of \eqn{A}. The default is test = FALSE.}  
 }
 
 \value{
 \item{constr.fit }{The constrained fit of \eqn{y} given that \eqn{\beta} is in the cone \eqn{C} of the form \eqn{\{\beta: A\beta \ge 0 \}}.}
-\item{unconstr.fit}{The unconstrainted fit, i.e. the least-squares regression of \eqn{y} on the space spanned by \eqn{X}.}
+\item{unconstr.fit}{The unconstrainted fit, i.e., the least-squares regression of \eqn{y} on the space spanned by \eqn{X}.}
 \item{pval}{The p-value for the hypothesis test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C}. The constraint cone \eqn{C} has the form \eqn{\{\beta: A\beta \ge 0 \}} and \eqn{V} is the null space of \eqn{A}. If test == TRUE, a p-value is returned. Otherwise, the test is skipped and no p-value is returned.}
-\item{coefs}{The estimated constrained parameters, i.e. the estimation of the vector \eqn{\beta}.}  
+\item{coefs}{The estimated constrained parameters, i.e., the estimation of the vector \eqn{\beta}.}  
 }
 
 \details{
-The hypothesis test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is an exact one-sided test, and the test statistic is \eqn{E_{01} = (SSE_0 - SSE_1)/SSE_0}, which has a mixture-of-betas distribution when \eqn{H_0} is true and \eqn{\epsilon} is a vector following a standard multivariate normal distribution with mean \eqn{0}. The mixing parameters are found through simulations. The number of simulations used to obtain the mixing distribution parameters for the test is 10,000. Such simuations usually take some time. For the "FEV" data set used as an example in this section, whose sample size is 654, the time to get a p-value is roughly between 3.0 to 9.4 seconds.
+The hypothesis test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is an exact one-sided test, and the test statistic is \eqn{E_{01} = (SSE_0 - SSE_1)/SSE_0}, which has a mixture-of-betas distribution when \eqn{H_0} is true and \eqn{\epsilon} is a vector following a standard multivariate normal distribution with mean \eqn{0}. The mixing parameters are found through simulations. The number of simulations used to obtain the mixing distribution parameters for the test is 10,000. Such simulations usually take some time. For the "FEV" data set used as an example in this section, whose sample size is 654, the time to get a p-value is roughly 5 seconds.
 
 The constreg function calls coneA for the cone projection part.
 }

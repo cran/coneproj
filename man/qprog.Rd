@@ -3,13 +3,13 @@
 \title{Quadratic Programming}
 \description{
 Given a positive definite \eqn{n} by \eqn{n} matrix \eqn{Q} and a constant vector \eqn{c} in \eqn{R^n}, the object is to find \eqn{\theta} in \eqn{R^n} to minimize \eqn{\theta'Q\theta - 2c'\theta} subject to \eqn{A\theta \ge b}, for an irreducible constraint matrix \eqn{A}. This routine transforms into a cone projection problem for the constrained solution. }
-\usage{qprog(q, c, amat, b, lst = TRUE)}
+\usage{qprog(q, c, amat, b)}
 \arguments{
   \item{q}{A \eqn{n} by \eqn{n} positive definite matrix.}
   \item{c}{A vector of length \eqn{n}.}
   \item{amat}{A \eqn{m} by \eqn{n} constraint matrix. The rows of amat must be irreducible.}
   \item{b}{A vector of length \eqn{m}. Its default value is 0.}
-  \item{lst}{A logical scalar. If lst == TRUE, df, thetahat, steps, message, and convergence are returned. Otherwise, message and convergence are omitted. The default is lst = TRUE. }}
+}
 \details{
 To get the constrained solution to \eqn{\theta'Q\theta - 2c'\theta} subject to \eqn{A\theta \ge b}, this routine makes the Cholesky decomposition of \eqn{Q}. Let \eqn{U'U = Q}, and define \eqn{\phi = U\theta} and \eqn{z = U^{-1}c}, where \eqn{U^{-1}} is the inverse of \eqn{U}.
 Then we minimize \eqn{||z - \phi||^2}, subject to \eqn{B\phi \ge 0}, where \eqn{B = AU^{-1}}. It is now a cone projection problem with the constraint cone \eqn{C} of the form \eqn{\{\phi: B\phi \ge 0 \}}. This routine gives the estimation of \eqn{\theta}, which is \eqn{U^{-1}} times the estimation of \eqn{\phi}. 
@@ -21,8 +21,7 @@ The routine qprog dynamically loads a C++ subroutine "qprogCpp".
 \item{df}{The dimension of the face of the constraint cone on which the projection lands.}
 \item{thetahat}{A vector minimizing \eqn{\theta'Q\theta - 2c'\theta}.}
 \item{steps}{The number of iterations before the algorithm converges.}
-\item{message}{A warning message showing the convergence of the algorithm. If steps > \eqn{n^2}, \eqn{n} is the length of \eqn{c}, a warning message is given.}
-\item{convergence}{A number showing the convergence of the algorithm. If convergence is 0, the algorithm converges; If convergence is 1, the algorithm fails to converge.}  }
+}
 \references{
 Goldfarb, D. and A. Idnani (1983) A numerically stable dual method for solving strictly convex quadratic programs.
 \emph{Mathematical Programming \bold{27}}, 1--33.

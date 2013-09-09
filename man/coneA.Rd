@@ -4,12 +4,12 @@
 \description{
 This routine implements the hinge algorithm for cone projection to minimize 
 \eqn{||y - \theta||^2} over the cone \eqn{C} of the form \eqn{\{\theta: A\theta \ge 0\}}. }
-\usage{coneA(y, amat, w = NULL, lst = TRUE)  }
+\usage{coneA(y, amat, w = NULL)  }
 \arguments{
   \item{y}{A vector of length \eqn{n}.}
   \item{amat}{A constraint matrix. The rows of amat must be irreducible. The column number of amat must equal the length of \eqn{y}.}
   \item{w}{An optional nonnegative vector of weights of length \eqn{n}. If w is not given, all weights are taken to equal 1. Otherwise, the minimization of \eqn{(y - \theta)'w(y - \theta)} over \eqn{C} is returned. The default is w = NULL.}
-  \item{lst}{A logical scalar. If lst == TRUE, a list of df, thetahat, steps, message and convergence is returned; Otherwise, message and convergence are omitted. The default is lst = TRUE.}  }
+}
 
 \details{
 The routine coneA dynamically loads a C++ subroutine "coneACpp". The rows
@@ -19,8 +19,7 @@ of \eqn{- A} are the edges of the polar cone \eqn{\Omega^o}. This routine first 
 \item{df}{The dimension of the face of the constraint cone on which the projection lands.}
 \item{thetahat}{The projection of  \eqn{y} on the constraint cone.}
 \item{steps}{The number of iterations before the algorithm converges.}
-\item{message}{A warning message showing the convergence of the algorithm. If steps > \eqn{n^2}, \eqn{n} is the length of \eqn{y}, a warning message is given.}
-\item{convergence}{A number showing the convergence of the algorithm. If convergence is 0,  the algorithm converges; If convergence is 1, the algorithm fails to converge.}  }
+}
 
 \references{
 Meyer, M. C. (1999) An extension of the mixed primal-dual bases algorithm to the case of more constraints than 
@@ -37,14 +36,19 @@ Mary C. Meyer and Xiyue Liao  }
 
 \examples{
 #generate y
+    set.seed(123)
     n <- 50
-    y <- rnorm(n) + sort(rnorm(n))
+    x <- seq(-2, 2, length = 50)
+    y <- - x^2 + rnorm(n)
 
-#create the constraint matrix to make y monotonically increasing
-    n <- 50
+#create the constraint matrix to make the first half of y monotonically increasing
+#and the second half of y monotonically decreasing
     amat <- matrix(0, n - 1, n)
-    for(i in 1:(n - 1)){
-        amat[i, i] <- -1; amat[i, i + 1] <- 1
+    for(i in 1:(n/2 - 1)){
+       amat[i, i] <- -1; amat[i, i + 1] <- 1
+    }
+    for(i in (n/2):(n - 1)){
+       amat[i, i] <- 1; amat[i, i + 1] <- -1
     }
 
 #call coneA
@@ -56,6 +60,7 @@ Mary C. Meyer and Xiyue Liao  }
     plot(y, cex = .7, ylab = "y")
     lines(ans1$thetahat, col = 2, lty = 2)
     lines(ans2$thetahat, col = 4, lty = 2)
-    legend("topleft", c("unweighted fit", "weighted fit"), col = c(2, 4), lty = c(2, 2))
-    title("ConeA Example Plot")  }
+    legend("topleft", bty = "n", c("unweighted fit", "weighted fit"), col = c(2, 4), lty = c(2, 2))
+    title("ConeA Example Plot")  
+}
 
