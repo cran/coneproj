@@ -22,10 +22,16 @@ coneA <- function(y, amat, w = NULL){
       y <- sqrt(w) %*% y
       amat <- amat %*% solve(sqrt(w))
       ans <- .Call("coneACpp", y, amat, PACKAGE = "coneproj")
+      if (ans$nrep > length(y)^2) {
+        print ("Fail to converge in conerpoj!nrep > n^2 !")
+      }
       ans$thetahat <- solve(sqrt(w), ans$thetahat)
     }
   } else { 
     ans <- .Call("coneACpp", y, amat, PACKAGE = "coneproj")
+    if (ans$nrep > length(y)^2) {
+      print ("Fail to converge in conerpoj!nrep > n^2 !")
+    }
     }
     rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)
 	#rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, message = NULL, convergence = 0)
@@ -227,6 +233,7 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
   #find the p-value for E01 test
   if (test) {
     nloop <- 1e+4
+    set.seed(123)
     if (bval > sm) {
       mdist <- 0:m*0
       for (iloop in 1:nloop) {
@@ -330,12 +337,13 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
   for (i in 1:pv) {
     se.beta[i] <- sqrt(se2[i, i])
     tstat[i] <- coefx[i] / se.beta[i]
-    pvals.beta[i] <- 1 - pt(tstat[i], 1.5 * ans$df)
+    pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), n - 1.5 * ans$df))
   }
   #find the p-value for E01 test 
   if (test) {
   #find the mixing parameters for the mixture-of-betas distribution for the E01 test statistic
     nloop <- 1e+4
+    set.seed(123)
     mdist <- 0:m*0
     for (iloop in 1:nloop) {
       colvmat <- ncol(vmat)

@@ -23,7 +23,7 @@ This routine constrains \eqn{\theta} in the equation \eqn{y = \theta + X\beta + 
 
 The constraint cone \eqn{C} has the form \eqn{\{\phi: \phi = v + \sum b_i\delta_i, i = 1,\ldots,m, b_1,\ldots, b_m \ge 0 \}}, \eqn{v} is in \eqn{V}. The column vectors of \eqn{X} are in \eqn{V}, i.e., the linear space contained in the constraint cone. 
 
-The hypothesis test \eqn{H_0: \phi} is in \eqn{V} versus \eqn{H_1: \phi} is in \eqn{C} is an exact one-sided test, and the test statistic is \eqn{E_{01} = (SSE_0 - SSE_1)/(SSE_0)}, which has a mixture-of-betas distribution when \eqn{H_0} is true and \eqn{\epsilon} is a vector following a standard multivariate normal distribution with mean 0. The mixing parameters are found through simulations. The number of simulations used to obtain the mixing distribution parameters for the test is 10,000. Such simulations usually take some time. For the "feet" data set used as an example in this section, whose sample size is 39, the time to get a p-value is roughly between 1.4 to 1.8 seconds. 
+The hypothesis test \eqn{H_0: \phi} is in \eqn{V} versus \eqn{H_1: \phi} is in \eqn{C} is an exact one-sided test, and the test statistic is \eqn{E_{01} = (SSE_0 - SSE_1)/(SSE_0)}, which has a mixture-of-betas distribution when \eqn{H_0} is true and \eqn{\epsilon} is a vector following a standard multivariate normal distribution with mean 0. The mixing parameters are found through simulations. The number of simulations used to obtain the mixing distribution parameters for the test is 10,000. Such simulations usually take some time. For the "feet" data set used as an example in this section, whose sample size is 39, the time to get a p-value is roughly between 4 seconds. 
 
 This routine calls coneB for the cone projection part. 
 }

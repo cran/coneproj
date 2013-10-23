@@ -57,10 +57,8 @@ BEGIN_RCPP
 
     int nrep = 0;
 
-    while(check == 0){
+    while(check == 0 & nrep < (n * n)){
         nrep ++ ;
-        if(nrep > (n * n)){
-           throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));}
         arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
         indice = indice.elem(find(h == 1));
         arma::mat xmat(indice.n_elem, delta.n_cols); xmat.fill(0);
@@ -92,7 +90,7 @@ BEGIN_RCPP
         }
     }
 
-    //if(nrep > (n * n)){Rcpp::Rcout << "ERROR DID NOT CONVERGE IN CONEPROJ" << std::endl;}
+    if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
 
     return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("dim") = n - sum(h), Named("nrep") = nrep));
 
@@ -178,17 +176,20 @@ BEGIN_RCPP
         if(!nvmat.is_empty()){
            a.set_size(p, 1); 
            a = solve(nvmat.t() * nvmat, nvmat.t() * ny);
+	   theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny);
         }
         arma::colvec avec(m + p); avec.fill(0);
-        avec.elem(find(h == 1)) = a;
-        return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec, Named("nrep") = nrep, Named("dim") = sum(h)));
+	if(!nvmat.is_empty()){
+          avec.elem(find(h == 1)) = a;
+	}        
+	return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec, Named("nrep") = nrep, Named("dim") = sum(h)));
     }
  
-    while(check == 0){
+    while(check == 0 & nrep < (n * n)){
         nrep ++;
-        if(nrep > (n * n)){
-           throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));
-        }
+        //if(nrep > (n * n)){
+          // throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));
+        //}
         arma::colvec indice = arma::linspace(0, sigma.n_rows-1, sigma.n_rows); 
         indice = indice.elem(find(h == 1));
         arma::mat xmat(indice.n_elem, sigma.n_cols); xmat.fill(0);
@@ -242,6 +243,8 @@ BEGIN_RCPP
     for(int i = p; i < (m + p); i ++){
         avec_orig(i) = avec(i) / scalar(i - p);
     }
+
+    if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
 
     return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec_orig, Named("nrep") = nrep, Named("dim") = sum(h)));
 
@@ -307,10 +310,10 @@ BEGIN_RCPP
 
     int nrep = 0;
 
-    while(check == 0){
+    while(check == 0 & nrep < (n * n)){
         nrep ++ ;
-        if(nrep > (n * n)){
-           throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));}
+       // if(nrep > (n * n)){
+         //  throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));}
         arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
         indice = indice.elem(find(h == 1));
         arma::mat xmat(indice.n_elem, delta.n_cols); xmat.fill(0);
@@ -348,7 +351,7 @@ BEGIN_RCPP
         thetahat = thetahat + theta0;
     }
 
-    //if(nrep > (n * n)){Rcpp::Rcout << "ERROR DID NOT CONVERGE IN CONEPROJ" << std::endl;}
+    if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in qprog!Too many steps! Number of steps:" << nrep << std::endl;}
 
     return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = thetahat, Named("dim") = n - sum(h), Named("nrep") = nrep));
 

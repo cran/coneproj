@@ -26,7 +26,7 @@ constreg(y, xmat, amat, w = NULL, test = FALSE)
 }
 
 \details{
-The hypothesis test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is an exact one-sided test, and the test statistic is \eqn{E_{01} = (SSE_0 - SSE_1)/SSE_0}, which has a mixture-of-betas distribution when \eqn{H_0} is true and \eqn{\epsilon} is a vector following a standard multivariate normal distribution with mean \eqn{0}. The mixing parameters are found through simulations. The number of simulations used to obtain the mixing distribution parameters for the test is 10,000. Such simulations usually take some time. For the "FEV" data set used as an example in this section, whose sample size is 654, the time to get a p-value is roughly 5 seconds.
+The hypothesis test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is an exact one-sided test, and the test statistic is \eqn{E_{01} = (SSE_0 - SSE_1)/SSE_0}, which has a mixture-of-betas distribution when \eqn{H_0} is true and \eqn{\epsilon} is a vector following a standard multivariate normal distribution with mean \eqn{0}. The mixing parameters are found through simulations. The number of simulations used to obtain the mixing distribution parameters for the test is 10,000. Such simulations usually take some time. For the "FEV" data set used as an example in this section, whose sample size is 654, the time to get a p-value is roughly 6 seconds.
 
 The constreg function calls coneA for the cone projection part.
 }
