@@ -1,4 +1,5 @@
 useDynLib(coneproj)
+import("Rcpp")
 export("coneA","coneB","qprog","constreg","shapereg")
 S3method(summary, shapereg)
 S3method(print, summary.shapereg)

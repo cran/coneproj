@@ -50,7 +50,7 @@ i = 1,\ldots,m, b_1,\ldots, b_m \ge 0 \}}, \eqn{v} is in \eqn{V}.}
 
 \item{SSE1}{The sum of squared residuals for the full model.}
 
-\item{call}{The matched call}
+\item{call}{The matched call.}
 }
 
 \references{Raubertas, R. F., C.-I. C. Lee, and E. V. Nordheim (1986) Hypothesis tests for normals
@@ -91,8 +91,7 @@ Meyer, M.C.(2013a) Semiparametric additive constrained regression. \emph{Journal
 
 #create the dummy variable indicating sex: if sex = "G", x = 0; if sex = "B", x = 1 
     n <- length(s)
-    x <- rep(0, n)
-    for(i in 1:n){if(s[i] == "G") x[i] = 0 else x[i] = 1}
+    x <- as.numeric(s != "G")
 
 #create the xmat in the shapereg function
     xmat <- x

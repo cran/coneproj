@@ -32,19 +32,9 @@ coneA <- function(y, amat, w = NULL){
     if (ans$nrep > length(y)^2) {
       print ("Fail to converge in conerpoj!nrep > n^2 !")
     }
-    }
-    rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)
-	#rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, message = NULL, convergence = 0)
-	#upper <- length(y)^2
-	#if(rslt$steps > upper){
-	#	warning ("iterations exceed the maximum number allowed !")
-	#	rslt$convergence <- 1
-	#	rslt$message <- "iterations exceed the maximum number allowed !"}
-	#if(!lst){
-	#	rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)    
-	#	rslt}
-	#else{
-	#	rslt}
+  }
+  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)
+  return (rslt) 
 }
 
 coneB <- function(y, delta, vmat = NULL, w = NULL){
@@ -92,20 +82,9 @@ coneB <- function(y, delta, vmat = NULL, w = NULL){
       }
     } else {
       ans <- .Call("coneBCpp", y, delta, nvmat, PACKAGE = "coneproj")
-      }
+    }
   rslt <- list(df = ans$dim, yhat = ans$yhat, steps = ans$nrep, coefs = ans$coefs)
-	#rslt <- list(df = ans$dim, yhat = ans$yhat, steps = ans$nrep, coefs = ans$coefs, message = NULL, convergence = 0)
-	#upper <- length(y)^2
-	#if(rslt$steps > upper){
-	#	warning ("iterations exceed the maximum number allowed !")
-       	#	rslt$convergence <- 1
-	#	rslt$message <- "iterations exceed the maximum number allowed !"}
-	#if(!lst){
-	#	rslt <- list(df = ans$dim, yhat = ans$yhat, steps = ans$nrep, coefs = ans$coefs)    
-       	#	rslt}
-	#else{
-	#	rslt
-	#}
+  return (rslt) 
 }
 
 qprog <- function(q, c, amat, b){
@@ -124,21 +103,10 @@ qprog <- function(q, c, amat, b){
   if (nrow(amat) != length(b)) {
     stop("the row number of amat should be equal to the length of b !")
   } else {
-  ans <- .Call("qprogCpp", q, c, amat, b, PACKAGE = "coneproj")
+    ans <- .Call("qprogCpp", q, c, amat, b, PACKAGE = "coneproj")
   }
   rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)
-	#rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, message = NULL, convergence = 0)
-	#upper <- length(c)^2
-	#if(rslt$steps > upper){
-	#	warning ("iterations exceed the maximum number allowed !")
-	#	rslt$convergence = 1
-	#	rslt$message = "iterations exceed the maximum number allowed !"}
-	#if(!lst){
-	#	rslt = list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)    
-       	#	rslt}
-	#else{
-	#	rslt
-	#}
+  return (rslt) 
 }
 
 ##################################################################
@@ -172,7 +140,7 @@ qrdecomp <- function(xm){
   ans <- new.env()
   ans$qm <- qm
   ans$rank <- nq
-  ans
+  return (ans)
 }
 
 constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
@@ -198,11 +166,6 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
       atil <- amat %*% uinv
       z <- t(uinv) %*% t(xmat) %*% w %*% y
       ans <- coneA(z, atil)
-      #bhat <- uinv %*% ans$thetahat	
-      #get constrained fit
-      #fhatc <- xmat %*% bhat
-      #get unconstrained fit
-      #fhatuc <- pmat %*% y
       }
   }
   #make the projection matrix for the unconstrained alternative
@@ -255,11 +218,11 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
       pval <- 1 - pval
     } else {pval <- 1}
     rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc, pval = pval, coefs = bhat)		
-    rslt		
+    return (rslt)		
   } else {
     rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc , coefs = bhat)		
-    rslt				
-    }
+    return (rslt)				
+  }
 }
 
 shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE,...)UseMethod("shapereg")
@@ -371,12 +334,12 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
       rslt <- list(pval = pval, coefs = coefx, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
       rslt$call <- match.call()	
       class(rslt) <- "shapereg"	
-      rslt
+      return (rslt)
   } else {
       rslt <- list(coefs = coefx, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
       rslt$call <- match.call()	
       class(rslt) <- "shapereg"
-      rslt   
+      return (rslt)   
     }
 }
 
@@ -471,7 +434,7 @@ makedelta <- function(x, sh){
   for (i in 1:dr) {
     delta[i, ] <- delta[i, ] / sqrt(sum(delta[i, ]^2))
   }
-  delta
+  return (delta)
 }
 
 summary.shapereg <- function(object,...)
@@ -508,7 +471,7 @@ summary.shapereg <- function(object,...)
   } 
   ans <- list(call = object$call, coefficients = rslt1, residuals = rslt2)
   class(ans) <- "summary.shapereg"
-  ans
+  return (ans)
 }
 
 print.summary.shapereg <- function(x,...)
