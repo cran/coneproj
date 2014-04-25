@@ -48,12 +48,18 @@ coneB <- function(y, delta, vmat = NULL, w = NULL){
     stop("the column number of delta must equal the length of y !")  
   }
   if (!is.null(vmat)) {
-    if (!is.numeric(vmat) || !is.matrix(vmat)) {
-      stop("vmat must be a numeric matrix !")
+   # if (!is.numeric(vmat) || !is.matrix(vmat)) {
+   #   stop("vmat must be a numeric matrix !")
+   # }
+    if (!is.numeric(vmat)) {
+       stop("vmat must be numeric !")
+    }
+    if (is.vector(vmat)) {
+       vmat <- as.matrix(vmat, ncol = 1)
     }
     if (nrow(vmat) != length(y)) {
       stop("the row number of vmat must equal the length of y !")
-  }
+    }
 # if vmat != NULL, we make a copy of vmat 
     nvmat <- vmat
  }
@@ -196,7 +202,7 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
   #find the p-value for E01 test
   if (test) {
     nloop <- 1e+4
-    set.seed(123)
+    #set.seed(123)
     if (bval > sm) {
       mdist <- 0:m*0
       for (iloop in 1:nloop) {
@@ -274,7 +280,20 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
   pv <- length(vmat) / n
   #find coefs for vmat and delta
   coefx <- ans$coefs[1:pv]
+  if (shape == 3|shape == 4) {
+    coefb <- coefx[-pv]
+  } else {coefb <- coefx}
   bvec <- ans$coefs[(pv + 1):(pv + nd)]
+
+#new code to get se(alpha):
+  duse <- bvec > 1e-8
+  if (sum(duse) >= 1) {
+    delsm <- delta[duse, , drop = FALSE]
+    bmat <- cbind(rep(1, n), nxmat, t(delsm))
+  } else {
+    bmat <- cbind(rep(1, n), nxmat) 
+  }
+
   #find H0 fit
   vhat <- vmat %*% coefx	
   theta <- t(delta) %*% bvec
@@ -291,22 +310,26 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
     sdhat2 <- sse1
   } else {
     sdhat2 <- sse1 / (n - 1.5 * ans$df)
-    }
-  se2 <- solve(crossprod(vmat)) * sdhat2
-  se.beta <- rep(0, pv)
-  tstat <- rep(0, pv)
+  }
+
+#new code: se(alpha)
+  #se2 <- solve(crossprod(vmat)) * sdhat2
+  pb <- 1 + ncol(nxmat)
+  se2 <- solve(crossprod(bmat)) * sdhat2
+  se.beta <- rep(0, pb)
+  tstat <- rep(0, pb)
   #find the approximate p-values for beta
-  pvals.beta <- rep(0, pv)
-  for (i in 1:pv) {
+  pvals.beta <- rep(0, pb)
+  for (i in 1:pb) {
     se.beta[i] <- sqrt(se2[i, i])
-    tstat[i] <- coefx[i] / se.beta[i]
+    tstat[i] <- coefb[i] / se.beta[i]
     pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), n - 1.5 * ans$df))
   }
   #find the p-value for E01 test 
   if (test) {
   #find the mixing parameters for the mixture-of-betas distribution for the E01 test statistic
     nloop <- 1e+4
-    set.seed(123)
+    #set.seed(123)
     mdist <- 0:m*0
     for (iloop in 1:nloop) {
       colvmat <- ncol(vmat)
@@ -331,12 +354,12 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
       }
       pval <- 1 - pval
     } else {pval <- 1}
-      rslt <- list(pval = pval, coefs = coefx, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
+      rslt <- list(pval = pval, coefs = coefb, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
       rslt$call <- match.call()	
       class(rslt) <- "shapereg"	
       return (rslt)
   } else {
-      rslt <- list(coefs = coefx, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
+      rslt <- list(coefs = coefb, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
       rslt$call <- match.call()	
       class(rslt) <- "shapereg"
       return (rslt)   
@@ -448,21 +471,21 @@ summary.shapereg <- function(object,...)
   sse0 <- object$SSE0
   sse1 <- object$SSE1
   test <- object$test
-  if (s == 3|s == 4){
-    rslt1 <- data.frame(Estimate = coefs[1:(n-1)], StdErr = se[1:(n-1)], t.value = tval[1:(n-1)], p.value = pvalbeta[1:(n-1)])
-    rownames(rslt1)[1] <- "intercept"
-    if (n > 1){
-      num <- 2:(n-1)
-      for (i in num){rownames(rslt1)[i] <- paste("xmat[,",i-1, "]", sep = "")}
-    }
-  } else {
+ # if (s == 3|s == 4){
+ #   rslt1 <- data.frame(Estimate = coefs[1:(n-1)], StdErr = se[1:(n-1)], t.value = tval[1:(n-1)], p.value = pvalbeta[1:(n-1)])
+ #   rownames(rslt1)[1] <- "intercept"
+ #   if (n > 1){
+ #     num <- 2:(n-1)
+ #     for (i in num){rownames(rslt1)[i] <- paste("xmat[,",i-1, "]", sep = "")}
+ #   }
+ # } else {
        rslt1 <- data.frame(Estimate = coefs, StdErr = se, t.value = tval, p.value = pvalbeta)
        rownames(rslt1)[1] <- "intercept"
        if (n > 1){
          num <- 2:n
          for (i in num){rownames(rslt1)[i] <- paste("xmat[,",i-1, "]", sep = "")}
        }
-    }
+  #  }
   rslt1 <- as.matrix(rslt1)
   rslt2 <- cbind(SSE.Linear = sse0, SSE.Full = sse1)
   if (test) {
@@ -490,7 +513,58 @@ print.summary.shapereg <- function(x,...)
    printCoefmat(x$residuals, P.values = TRUE, has.Pvalue = TRUE)
 }
 
-
+###########################################
+#suppose the rows of a matrix are edges   #
+#we check the irreducibility of the matrix#
+###########################################
+check_irred <- function(mat) {
+  if (!is.matrix(mat)) {
+    stop ("only a matrix can be checked irreducibility!")
+  }
+  n <- nrow(mat)
+  sm <- 1e-8
+  nmat <- mat
+  base <- mat
+  hd <- head(mat, 1)
+  tl <- tail(mat, -1)
+  id <- 1
+  m <- n
+  rm_id <- NULL
+  eq <- FALSE 
+  eq_num <- 0
+  while (nrow(tl) >= 1 & nrow(base) >= 1) {
+     ans <- coneB(hd, tl)
+     hd0 <- hd
+     if (all(round(as.vector(ans$yhat), 8) == round(as.vector(hd), 8))) {
+       hd <- head(tl, 1)
+       tl <- tail(tl, -1)
+       rm_id <- c(rm_id, id)
+     } else {
+         ans <- coneB(-hd, tl)
+         if (all(round(as.vector(ans$yhat), 8) == round(as.vector(-hd), 8))) {
+           eq <- TRUE
+           eq_num <- eq_num + 1
+           hd <- head(tl, 1)
+           tl <- rbind(tail(tl, -1), hd0)
+         }
+         else {
+           hd <- head(tl, 1)
+           tl <- rbind(tail(tl, -1), hd0)   
+         }
+     } 
+     id <- id + 1
+     m <- m - 1
+     base <- base[-1, ,drop = FALSE]
+  }
+  if (!is.null(rm_id)) {
+    nmat <- nmat[-rm_id, ,drop = FALSE]
+  }
+  if (!eq && is.null(rm_id)) {
+     print ("edges are irreducible!")
+  }
+  rslt <- list(edge = nmat, reducible = rm_id, equal = eq_num)
+  return (rslt)
+}
 
 
 

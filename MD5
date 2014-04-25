@@ -1,10 +1,13 @@
-6968335e7a71a58b093571cf531d849e *DESCRIPTION
-e9bfa884aa6faa9920be9cfcef67d436 *NAMESPACE
-fd470794aecb45bc7a7d22d160ab2760 *R/coneproj.R
+de4da7f59fb9f6a3b1d646a39c82f874 *DESCRIPTION
+661b90e510dec6284b00982bcd528bcd *NAMESPACE
+6a970aa41f27a848f29db4a7ce5e9fad *R/coneproj.R
 6c47022af5f00352baf82f954b97620c *data/FEV.rda
+6f81a786501f736f47a862ea5bf3c3ab *data/TwoDamat.rda
 4355ceabc8055a2a009d05e7486da496 *data/cubic.rda
 2ea3092f3e46ae944e976bab4aa7644d *data/feet.rda
 81a14ec4b50bbef7eae9cb20d01f26ef *man/FEV.Rd
+5e6264ae028b289439d2009e8e431c22 *man/TwoDamat.Rd
+3bb07a180cfe90db2e7dee31d84de9d3 *man/check_irred.Rd
 13d88862d6f45a435fc8b34c320f1f5f *man/coneA.Rd
 bf935a77051bb1e698bf2f35205cd190 *man/coneB.Rd
 b223a566ca85bb685af4f4706fc409b0 *man/constreg.Rd
