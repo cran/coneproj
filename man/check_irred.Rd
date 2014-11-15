@@ -25,7 +25,12 @@ Meyer, M. C. (1999) An extension of the mixed primal-dual bases algorithm to the
 dimensions. \emph{Journal of Statistical Planning and Inference \bold{81}}, 13--31.
 
 Meyer, M. C. (2013b) A simple new algorithm for quadratic programming with applications in statistics. \emph{Communications
-in Statistics \bold{42(5)}}, 1126--1139.  }
+in Statistics \bold{42(5)}}, 1126--1139.  
+
+Liao, X. and M. C. Meyer (2014) coneproj: An R package for the primal or dual cone projections with routines for constrained regression. \emph{Journal of Statistical Software \bold{61(12)}}, 1--22.
+}
+
+
 
 \author{
 Mary C. Meyer and Xiyue Liao  

@@ -64,11 +64,14 @@ Fraser, D. A. S. and H. Massam (1989) A mixed primal-dual bases algorithm for re
 under inequality constraints application to concave regression. \emph{Scandinavian Journal of Statistics \bold{16}}, 65--74.
 
 Meyer, M. C. (2003) A test for linear vs convex regression function using shape-restricted
-regression. \emph{Biometrika \bold{90 (1)}}, 223--232.
+regression. \emph{Biometrika \bold{90(1)}}, 223--232.
 
 Cheng, G.(2009) Semiparametric additive isotonic regression. \emph{Journal of Statistical Planning and Inference \bold{139}}, 1980--1991.
 
-Meyer, M.C.(2013a) Semiparametric additive constrained regression. \emph{Journal of Nonparametric Statistics to appear}.  }
+Meyer, M.C.(2013a) Semiparametric additive constrained regression. \emph{Journal of Nonparametric Statistics \bold{25(3)}}, 715--743.  
+
+Liao, X. and M. C. Meyer (2014) coneproj: An R package for the primal or dual cone projections with routines for constrained regression. \emph{Journal of Statistical Software \bold{61(12)}}, 1--22.
+}
 
 \author{Mary C. Meyer and Xiyue Liao}
 

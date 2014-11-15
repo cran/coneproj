@@ -35,12 +35,15 @@ The constreg function calls coneA for the cone projection part.
 Brunk, H. D. (1958) On the estimation of parameters restricted by inequalities.
 \emph{The Annals of Mathematical Statistics \bold{29 (2)}}, 437--454.
 
-Raubertas, R. F., C.-I. C. Lee, and E. V. Nordheim (1986). Hypothesis tests for normals
+Raubertas, R. F., C.-I. C. Lee, and E. V. Nordheim (1986) Hypothesis tests for normals
 means constrained by linear inequalities. \emph{Communications in Statistics - Theory and 
 Methods \bold{15 (9)}}, 2809--2833.
 
-Meyer, M. C. and J. C. Wang (2012). Improved power of one-sided tests. \emph{Statistics and 
-Probability Letters \bold{82}}, 1619--1622.  }
+Meyer, M. C. and J. C. Wang (2012) Improved power of one-sided tests. \emph{Statistics and 
+Probability Letters \bold{82}}, 1619--1622.  
+
+Liao, X. and M. C. Meyer (2014) coneproj: An R package for the primal or dual cone projections with routines for constrained regression. \emph{Journal of Statistical Software \bold{61(12)}}, 1--22.
+}
 
 \author{
 Mary C. Meyer and Xiyue Liao 
