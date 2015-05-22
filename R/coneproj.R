@@ -1,8 +1,11 @@
-coneA <- function(y, amat, w = NULL){
-  if (!is.numeric(y) || length(y) == 0) {
+############
+#polar cone#
+############
+coneA <- function(y, amat, w = NULL, msg = TRUE){
+  if (!is.numeric(y) | length(y) == 0) {
     stop("y must be a numeric vector of length >= 1 !")
   }
-  if (!is.numeric(amat) || !is.matrix(amat)) {
+  if (!is.numeric(amat) | !is.matrix(amat)) {
     stop("amat must be a numeric matrix !")
   }
   if (ncol(amat) != length(y)) {
@@ -22,6 +25,11 @@ coneA <- function(y, amat, w = NULL){
       y <- sqrt(w) %*% y
       amat <- amat %*% solve(sqrt(w))
       ans <- .Call("coneACpp", y, amat, PACKAGE = "coneproj")
+      if (ans$nrep > (length(y)^2 - 1)) {
+        if (msg) {
+          print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
+        }
+      }
       if (ans$nrep > length(y)^2) {
         print ("Fail to converge in conerpoj!nrep > n^2 !")
       }
@@ -29,26 +37,36 @@ coneA <- function(y, amat, w = NULL){
     }
   } else { 
     ans <- .Call("coneACpp", y, amat, PACKAGE = "coneproj")
+    if (ans$nrep > (length(y)^2 - 1)) {
+      if (msg) {
+        print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
+      }
+    }
     if (ans$nrep > length(y)^2) {
       print ("Fail to converge in conerpoj!nrep > n^2 !")
     }
   }
   rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)
+  attr(rslt, "sub") <- "coneA"
+  class(rslt) <- "coneproj"
   return (rslt) 
 }
 
-coneB <- function(y, delta, vmat = NULL, w = NULL){
-  if (!is.numeric(y) || length(y) == 0) {
+#################
+#constraint cone#
+#################
+coneB <- function(y, delta, vmat = NULL, w = NULL, msg = TRUE){
+  if (!is.numeric(y) | length(y) == 0) {
     stop("y must be a numeric vector of length >= 1 !")
   }
-  if (!is.numeric(delta) || !is.matrix(delta)) { 
+  if (!is.numeric(delta) | !is.matrix(delta)) { 
     stop("delta must be a numeric matrix !")      
   }
   if (ncol(delta) != length(y)) {
     stop("the column number of delta must equal the length of y !")  
   }
   if (!is.null(vmat)) {
-   # if (!is.numeric(vmat) || !is.matrix(vmat)) {
+   # if (!is.numeric(vmat) | !is.matrix(vmat)) {
    #   stop("vmat must be a numeric matrix !")
    # }
     if (!is.numeric(vmat)) {
@@ -84,16 +102,31 @@ coneB <- function(y, delta, vmat = NULL, w = NULL){
 	  nvmat <- sqrt(w) %*% nvmat
         }
 	ans <- .Call("coneBCpp", y, delta, nvmat, PACKAGE = "coneproj")
+        if (ans$nrep > (length(y)^2 - 1)) {
+          if (msg) {
+            print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
+          }
+        }
 	ans$yhat <- solve(sqrt(w), ans$yhat)
       }
     } else {
       ans <- .Call("coneBCpp", y, delta, nvmat, PACKAGE = "coneproj")
+      if (ans$nrep > (length(y)^2 - 1)) {
+        if (msg) {
+          print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
+        }
+      }
     }
   rslt <- list(df = ans$dim, yhat = ans$yhat, steps = ans$nrep, coefs = ans$coefs)
+  attr(rslt, "sub") <- "coneB"
+  class(rslt) <- "coneproj"
   return (rslt) 
 }
 
-qprog <- function(q, c, amat, b){
+#######################
+#quadratic programming#
+#######################
+qprog <- function(q, c, amat, b, msg = TRUE) {
   if (!is.vector(c)) {
     c <- as.vector(c)
   }
@@ -110,15 +143,22 @@ qprog <- function(q, c, amat, b){
     stop("the row number of amat should be equal to the length of b !")
   } else {
     ans <- .Call("qprogCpp", q, c, amat, b, PACKAGE = "coneproj")
+    if (ans$nrep > (length(c)^2 - 1)) {
+       if (msg) {
+          print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
+        }
+    }
   }
   rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)
+  attr(rslt, "sub") <- "qprog"
+  class(rslt) <- "coneproj"
   return (rslt) 
 }
 
 ##################################################################
 # computes Q of QR decomposition; returns col rank of a matrix   #
 ##################################################################
-qrdecomp <- function(xm){
+qrdecomp <- function(xm) {
   n <- length(xm[, 1]); m <- length(xm[1, ]) 
   sm <- 1e-8
   nq <- 1
@@ -149,7 +189,10 @@ qrdecomp <- function(xm){
   return (ans)
 }
 
-constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
+######################################
+#parametrically restricted regression#
+######################################
+constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
   n <- length(y)
   sm <- 1e-10
   m <- length(xmat) / n 
@@ -175,7 +218,7 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
       }
   }
   #make the projection matrix for the unconstrained alternative
-  if(is.null(w)){
+  if (is.null(w)) {
     pmat <- xmat %*% solve(crossprod(xmat), t(xmat))	
     #use quadratic programming to get bhat
     umat <- chol(crossprod(xmat))	
@@ -201,7 +244,7 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
   dim0 <- m - g$rank
   #find the p-value for E01 test
   if (test) {
-    nloop <- 1e+4
+    nloop <- nloop
     #set.seed(123)
     if (bval > sm) {
       mdist <- 0:m*0
@@ -224,29 +267,133 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE){
       pval <- 1 - pval
     } else {pval <- 1}
     rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc, pval = pval, coefs = bhat)		
-    return (rslt)		
   } else {
-    rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc , coefs = bhat)		
-    return (rslt)				
+    rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc , coefs = bhat)			
   }
+  attr(rslt, "sub") <- "constreg"
+  class(rslt) <- "coneproj"	
+  return (rslt)	
 }
 
-shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE,...)UseMethod("shapereg")
-shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
+##########################
+#shape-restricted routine#
+##########################
+shapereg <- function(formula, data = NULL, weights = NULL, test = FALSE, nloop = 1e+4) {
+  cl <- match.call()
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0L)
+  mf <- mf[c(1L, m)]
+  mf[[1L]] <- as.name("model.frame")
+  mf <- eval(mf, parent.frame())
+  ynm <- names(mf)[1]
+  mt <- attr(mf, "terms")
+  y <- model.response(mf, "any")
+  shape <- NULL
+  t <- NULL
+  tnm <- NULL
+  zmat <- NULL; zid <- NULL; zid0 <- NULL; zid1 <- NULL; zid2 <- NULL; znms <- NULL; is_fac <- NULL; vals <- NULL; dist <- 0
+  for (i in 2: ncol(mf)) {
+    if (is.numeric(attributes(mf[,i])$shape)) {
+      shape <- c(shape, attributes(mf[,i])$shape)
+      t <- cbind(t, mf[,i])
+      tnm <- c(tnm, attributes(mf[,i])$nm)
+    }
+    if (is.null(attributes(mf[,i])$shape)) {
+      if (!is.null(names(mf)[i])) {
+        znms <- c(znms, names(mf)[i])
+      }
+      if (!is.matrix(mf[,i])) {
+        zid <- c(zid, i)
+        if (is.factor(mf[,i])) {
+	  is_fac <- c(is_fac, TRUE)
+#new: check
+	  ch_char <- suppressWarnings(is.na(as.numeric(levels(mf[,i]))))
+          if (any(ch_char)) {
+            vals <- c(vals, unique(levels(mf[,i]))[2])
+          } else {
+	      vals <- c(vals, min(as.numeric(levels(mf[,i]))))
+	  }
+          nlvs <- length(attributes(mf[,i])$levels)
+          zid0 <- i + 0:(nlvs - 2) + dist
+	  zid1 <- c(zid1, i + dist)
+	  zid2 <- c(zid2, i + nlvs - 2 + dist)
+          dist <- nlvs - 2
+	  zmat0 <- as.matrix(model.matrix(mt, mf)[,zid0], ncol = (length(zmat0) / length(y)))
+	  mat_cols <- ncol(zmat0)
+	  mat_rm <- NULL
+	  rm_num <- 0
+	  for (irm in 1:mat_cols) {
+       	    if (all(round(diff(zmat0[, irm]), 8) == 0)) {
+              mat_rm <- c(mat_rm, irm)
+            }
+   	  }
+	  if (!is.null(mat_rm)) {
+	    zmat0 <- zmat0[, -mat_rm, drop = FALSE]
+	    rm_num <- rm_num + length(mat_rm)
+	  }
+	  zmat <- cbind(zmat, zmat0)
+       } else {
+           is_fac <- c(is_fac, FALSE)
+	   zmat <- cbind(zmat, mf[,i])
+	   zid1 <- c(zid1, i + dist)
+	   zid2 <- c(zid2, i + dist)
+       }
+     } else {
+         is_fac <- c(is_fac, TRUE)
+	 zmat0 <- mf[,i]
+	 mat_cols <- ncol(zmat0)
+	 mat_rm <- NULL
+	 rm_num <- 0
+	 for (irm in 1:mat_cols) {
+       	   if (all(round(diff(zmat0[, irm]), 8) == 0)) {
+             mat_rm <- c(mat_rm, irm)
+           }
+   	 }
+	 if (!is.null(mat_rm)) {
+	   zmat0 <- zmat0[, -mat_rm, drop = FALSE]
+	   rm_num <- rm_num + length(mat_rm)
+	 }
+	 zmat <- cbind(zmat, zmat0)
+	 vals <- c(vals, 1)
+	 zid1 <- c(zid1, i + dist)
+	 zid2 <- c(zid2, i + ncol(mf[,i]) - 1 + dist - rm_num)
+	 zid <- c(zid, i)
+         dist <- ncol(mf[,i]) - 1
+     }
+   }
+  }
+  if (!test & nloop > 0) {
+	nloop <- 0
+  	#print ("nloop > 0, test should be TRUE!")
+  }
+  ans <- shapereg.fit(y, t, shape, xmat = zmat, w = weights, test = test, nloop = nloop)
+  rslt <- list(coefs = ans$coefs, constr.fit = ans$constr.fit, linear.fit = ans$linear.fit, se.beta = ans$se.beta, pval = ans$pval, pvals.beta = ans$pvals.beta, test = ans$test, SSE0 = ans$SSE0, SSE1 = ans$SSE1, shape = shape, tms = mt, zid = zid, vals = vals, zid1 = zid1, zid2 = zid2, tnm = tnm,  ynm = ynm, znms = znms, is_fac = is_fac, xmat = zmat)
+  rslt$call <- match.call()		
+  attr(rslt, "sub") <- "shapereg"
+  class(rslt) <- "coneproj"
+  return (rslt) 
+}
+
+##########################
+#core routine of shapereg#
+##########################
+shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop = 1e+4) {
   #find delta for the constraint cone 
     delta <- makedelta(t, shape)
     if (is.null(xmat)) {
-      if (shape == 3|shape == 4) {
+      nxmat <- NULL
+      if (shape == 3 | shape == 4) {
         vmat <- cbind(rep(1, length(y)), t)
       } else {vmat <- matrix(rep(1, length(y)), ncol = 1)}
     }
     if (!is.null(xmat)) {
-      if (is.vector(xmat)) {
+       if (is.vector(xmat)) {
         nxmat <- matrix(xmat, ncol = 1)
-        if (all.equal(diff(nxmat), matrix(rep(0, nrow(nxmat)-1), ncol = 1)) == TRUE) {
+        if (all(round(diff(nxmat), 8) == 0)) {
+        #if (all.equal(round(diff(nxmat), 8), matrix(rep(0, nrow(nxmat)-1), ncol = 1))) {
            nxmat <- NULL
         } 
-        if (shape == 3|shape == 4) {
+        if (shape == 3 | shape == 4) {
           vmat <- cbind(rep(1, length(y)), nxmat, t)
         } else {vmat <- cbind(rep(1, length(y)), nxmat)}
       }
@@ -259,15 +406,16 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
         mat_rows <- nrow(nxmat)
         mat_rm <- NULL
         for (i in 1:mat_cols) {
-          if (all.equal(diff(nxmat[, i]), rep(0, mat_rows-1)) == TRUE){
+          if (all(round(diff(nxmat[, i]), 8) == 0)) {
+          #if (all.equal(round(diff(nxmat[, i]), 8), rep(0, mat_rows-1))){
             mat_rm <- c(mat_rm, i)
           }
         }
         if (!is.null(mat_rm)) {
           nxmat <- nxmat[,-mat_rm,drop=FALSE]
         }
-        if (shape == 3|shape == 4) {
-          vmat <- cbind(rep(1, length(y)) ,nxmat, t)
+        if (shape == 3 | shape == 4) {
+          vmat <- cbind(rep(1, length(y)), nxmat, t)
         } else {vmat <- cbind(rep(1, length(y)), nxmat)}
     }
     if (qr(vmat)$rank != ncol(vmat)) {
@@ -280,7 +428,7 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
   pv <- length(vmat) / n
   #find coefs for vmat and delta
   coefx <- ans$coefs[1:pv]
-  if (shape == 3|shape == 4) {
+  if (shape == 3 | shape == 4) {
     coefb <- coefx[-pv]
   } else {coefb <- coefx}
   bvec <- ans$coefs[(pv + 1):(pv + nd)]
@@ -293,7 +441,6 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
   } else {
     bmat <- cbind(rep(1, n), nxmat) 
   }
-
   #find H0 fit
   vhat <- vmat %*% coefx	
   theta <- t(delta) %*% bvec
@@ -311,24 +458,33 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
   } else {
     sdhat2 <- sse1 / (n - 1.5 * ans$df)
   }
-
 #new code: se(alpha)
   #se2 <- solve(crossprod(vmat)) * sdhat2
-  pb <- 1 + ncol(nxmat)
+  if (is.null(nxmat)) {
+    pb <- 1
+  } else {
+    pb <- 1 + ncol(nxmat)
+  }
   se2 <- solve(crossprod(bmat)) * sdhat2
   se.beta <- rep(0, pb)
   tstat <- rep(0, pb)
   #find the approximate p-values for beta
   pvals.beta <- rep(0, pb)
-  for (i in 1:pb) {
-    se.beta[i] <- sqrt(se2[i, i])
-    tstat[i] <- coefb[i] / se.beta[i]
-    pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), n - 1.5 * ans$df))
+#new code: n - 1.5 * ans$df must be positive
+  if ((n - 1.5 * ans$df) <= 0) {
+      print ("Degree of Freedom is non-positive! P-value(s) for Beta cannot be computed!")
+      pvals.beta <- NULL
+  } else {
+      for (i in 1:pb) {
+        se.beta[i] <- sqrt(se2[i, i])
+        tstat[i] <- coefb[i] / se.beta[i]
+        pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), n - 1.5 * ans$df))
+      }
   }
   #find the p-value for E01 test 
   if (test) {
   #find the mixing parameters for the mixture-of-betas distribution for the E01 test statistic
-    nloop <- 1e+4
+    nloop <- nloop
     #set.seed(123)
     mdist <- 0:m*0
     for (iloop in 1:nloop) {
@@ -338,7 +494,7 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
         ys <- ys + vmat[,i]
       }
       ys <- ys + rnorm(n)
-      ans <- coneB(ys, delta, vmat)
+      ans <- coneB(ys, delta, vmat, w)
       l <- ans$df + 1
       mdist[l] <- mdist[l] + 1
     }
@@ -355,19 +511,48 @@ shapereg <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE){
       pval <- 1 - pval
     } else {pval <- 1}
       rslt <- list(pval = pval, coefs = coefb, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
-      rslt$call <- match.call()	
-      class(rslt) <- "shapereg"	
-      return (rslt)
   } else {
-      rslt <- list(coefs = coefb, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
-      rslt$call <- match.call()	
-      class(rslt) <- "shapereg"
-      return (rslt)   
+      rslt <- list(pval = NULL, coefs = coefb, constr.fit = yhat, linear.fit = vhat, se.beta = se.beta, pvals.beta = pvals.beta, shape = shape, test = test, SSE0 = sse0, SSE1 = sse1)
     }
+  #rslt$call <- match.call()		
+  #attr(rslt, "sub") <- "shapereg"
+  #class(rslt) <- "coneproj"
+  return (rslt)
 }
 
-#find delta for a specific predictor x and a shape 
-makedelta <- function(x, sh){
+###################
+#new fitted method#
+###################
+fitted.coneproj <- function(object,...) {
+  sub <- attributes(object)$sub
+  if (sub == "coneA" | sub == "qprog") {
+    ans <- object$thetahat
+  } else if (sub == "coneB") {
+    ans <- object$yhat
+  } else if (sub == "constreg") {
+    #ans <- list(constr.fit = as.vector(object$constr.fit), unconstr.fit = as.vector(object$unconstr.fit))
+    ans <- as.vector(object$constr.fit)
+  } else if (sub == "shapereg") {
+    #ans <- list(constr.fit = object$constr.fit, linear.fit = object$linear.fit)
+    ans <- object$constr.fit
+  } else {
+    ans <- NULL
+  }
+  ans
+}
+
+#################
+#new coef method#
+#################
+coef.coneproj <- function(object,...) {
+  ans <- object$coefs
+  ans	
+}
+
+###################################################
+#find delta for a specific predictor x and a shape#
+################################################### 
+makedelta <- function(x, sh) {
   n <- length(x)
   xs <- sort(x)
   xu <- 1:n*0
@@ -460,57 +645,130 @@ makedelta <- function(x, sh){
   return (delta)
 }
 
-summary.shapereg <- function(object,...)
-{
-  s <- object$shape
-  coefs <- object$coefs
-  se <- object$se.beta
-  tval <- coefs/se
-  pvalbeta <- object$pvals.beta
-  n <- length(coefs)
-  sse0 <- object$SSE0
-  sse1 <- object$SSE1
-  test <- object$test
- # if (s == 3|s == 4){
- #   rslt1 <- data.frame(Estimate = coefs[1:(n-1)], StdErr = se[1:(n-1)], t.value = tval[1:(n-1)], p.value = pvalbeta[1:(n-1)])
- #   rownames(rslt1)[1] <- "intercept"
- #   if (n > 1){
- #     num <- 2:(n-1)
- #     for (i in num){rownames(rslt1)[i] <- paste("xmat[,",i-1, "]", sep = "")}
- #   }
- # } else {
-       rslt1 <- data.frame(Estimate = coefs, StdErr = se, t.value = tval, p.value = pvalbeta)
-       rownames(rslt1)[1] <- "intercept"
-       if (n > 1){
-         num <- 2:n
-         for (i in num){rownames(rslt1)[i] <- paste("xmat[,",i-1, "]", sep = "")}
-       }
-  #  }
-  rslt1 <- as.matrix(rslt1)
-  rslt2 <- cbind(SSE.Linear = sse0, SSE.Full = sse1)
-  if (test) {
-    PVAL <- object$pval
-    rslt2 <- cbind(rslt2, "P.value.f(t)" = PVAL)
-  } 
-  ans <- list(call = object$call, coefficients = rslt1, residuals = rslt2)
-  class(ans) <- "summary.shapereg"
-  return (ans)
+#########
+#summary#
+######### 
+summary.coneproj <- function(object,...) {
+  sub <- attributes(object)$sub
+  if (sub == "shapereg") {
+	if (!is.null(object$coefs)) {
+		coefs <- object$coefs
+		se <- object$se.beta
+		tval <- coefs / se
+		pvalbeta <- object$pvals.beta
+#new:
+#if (is.null(pvalbeta)) {
+#	stop ("No P-value(s) for Beta! Summary table is not available!")
+#}
+		pval <- object$pval
+		n <- length(coefs)
+		sse0 <- object$SSE0
+		sse1 <- object$SSE1
+		zid <- object$zid
+		shape <- object$shape
+		zid1 <- object$zid1 - 1 - length(shape)
+		zid2 <- object$zid2 - 1 - length(shape)
+		tms <- object$tms
+		zmat <- object$xmat
+		is_fac <- object$is_fac
+		vals <- object$vals
+		test <- object$test
+#new:
+rslt1 <- rslt2 <- NULL
+if (!is.null(pvalbeta)) {
+		rslt1 <- data.frame("Estimate" = round(coefs, 4), "StdErr" = round(se, 4), "t.value" = round(tval, 4), "p.value" = round(pvalbeta, 4))
+		rownames(rslt1)[1] <- "(Intercept)"
+		if (n > 1) {
+			if (is.null(colnames(zmat)) | any(colnames(zmat) == "")) {
+				lzid <- length(zid1) 
+				for (i in 1:lzid) {
+					pos1 <- zid1[i]; pos2 <- zid2[i];
+					lvals <- length(vals) 
+					for (k in 1:lvals) {vali <- vals[k]} 
+#lvs <- vali+1
+#new: check!!
+					if (is.numeric(vali)) {
+						lvs <- vali + 1
+					} else {
+						lvs <- vali 
+					}
+					for (j in pos1:pos2) {
+						if (!is_fac[i]) {
+							rownames(rslt1)[j + 1] <- attributes(tms)$term.labels[zid[i] - 1]
+						} else {
+							rownames(rslt1)[j + 1] <- paste(attributes(tms)$term.labels[zid[i] - 1], lvs, sep = "")
+						}	
+					}
+				}
+			} else {
+				rownames(rslt1)[2:n] <- colnames(zmat)
+			}
+		}
+		rslt1 <- as.matrix(rslt1)
+} 
+		if (!is.null(sse0) & !is.null(sse1)) {
+			rslt2 <- cbind(SSE.Linear = sse0, SSE.Full = sse1)
+			if (test) {
+			      PVAL <- object$pval
+			      rslt2 <- cbind(rslt2, "P.value.f(t)" = PVAL)
+		        } 
+#new:
+			if (!is.null(rslt1)) {
+				ans <- list(call = object$call, coefficients = rslt1, residuals = rslt2, zcoefs = coefs) 
+			} else {
+				ans <- list(call = object$call, residuals = rslt2, zcoefs = coefs) 
+			}
+			attr(ans, "sub") <- sub
+			if (!is.null(rslt1)) {
+				class(ans) <- "summary.coneproj"
+			}
+			ans
+		} else {
+			if (!is.null(rslt1)) {
+				ans <- list(call = object$call, coefficients = rslt1, zcoefs = coefs)
+			} else {
+				ans <- list(call = object$call, zcoefs = coefs)
+			}
+			attr(ans, "sub") <- sub
+			if (!is.null(rslt1)) {
+				class(ans) <- "summary.coneproj"
+			}			
+			ans
+		}
+	} else {
+		ans <- list(zcoefs = object$coefs)
+		attr(ans, "sub") <- sub
+		class(ans) <- "summary.coneproj"
+		ans
+	}
+  } else {
+	ans <- list(coefs = object$coefs, fhat = fitted(object))
+  	return (ans)
+  }
 }
 
-print.summary.shapereg <- function(x,...)
+###############
+#print.summary#
+###############
+print.summary.coneproj <- function(x,...)
 {
-   cat("Call:\n")
-   print(x$call)
-   cat("\n")
-   cat("Coefficients:")
-   cat("\n")
-   printCoefmat(x$coefficients, P.values = TRUE, has.Pvalue = TRUE)
-   cat("==============================================================")
-   cat("\n")
-   cat("Call:\n")
-   print(x$call)
-   cat("\n")
-   printCoefmat(x$residuals, P.values = TRUE, has.Pvalue = TRUE)
+  sub <- attributes(x)$sub
+  if (sub == "shapereg") {
+    cat("Call:\n")
+    print(x$call)
+    cat("\n")
+    cat("Coefficients:")
+    cat("\n")
+    printCoefmat(x$coefficients, P.values = TRUE, has.Pvalue = TRUE)
+    cat("==============================================================", "\n")
+    cat("Call:\n")
+    print(x$call)
+    cat("\n")
+    printCoefmat(x$residuals, P.values = TRUE, has.Pvalue = TRUE)
+  } else {
+   #print ("not shapereg!") 
+    print (x)
+  }
 }
 
 ###########################################
@@ -565,9 +823,81 @@ check_irred <- function(mat) {
   rslt <- list(edge = nmat, reducible = rm_id, equal = eq_num)
   return (rslt)
 }
+ 
+#######################
+#eight shape functions#
+####################### 
+incr <- function(x) 
+{
+    cl <- match.call()
+    pars <- match.call()[-1]
+    attr(x, "nm") <- deparse(pars$x)
+    attr(x, "shape") <- 1
+    x
+}
 
+decr <- function(x) 
+{
+    cl <- match.call()
+    pars <- match.call()[-1]
+    attr(x, "nm") <- deparse(pars$x)
+    attr(x, "shape") <- 2
+    x 
+} 
 
+conv <- function(x) 
+{
+    cl <- match.call()
+    pars <- match.call()[-1]
+    attr(x, "nm") <- deparse(pars$x)
+    attr(x, "shape") <- 3
+    x
+}
 
+conc <- function(x) 
+{
+    cl <- match.call()
+    pars <- match.call()[-1]
+    attr(x, "nm") <- deparse(pars$x)
+    attr(x, "shape") <- 4
+    x
+}
+
+incr.conv <- function(x) 
+{
+    cl <- match.call()
+    pars <- match.call()[-1]
+    attr(x, "nm") <- deparse(pars$x)
+    attr(x, "shape") <- 5
+    x
+}
+
+decr.conv <- function(x) 
+{
+    cl <- match.call()
+    pars <- match.call()[-1]
+    attr(x, "nm") <- deparse(pars$x)
+    attr(x, "shape") <- 6
+    x
+}
+
+incr.conc <- function(x) 
+{
+    cl <- match.call()
+    pars <- match.call()[-1]
+    attr(x, "nm") <- deparse(pars$x)
+    attr(x, "shape") <- 7
+    x
+}
+
+decr.conc <- function(x) 
+{
+    cl <- match.call()
+    pars <- match.call()[-1]
+    attr(x, "nm") <- deparse(pars$x)
+    attr(x, "shape") <- 8
+    x
+}
 
 
 

@@ -90,7 +90,7 @@ BEGIN_RCPP
         }
     }
 
-    if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
+    //if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
 
     return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("dim") = n - sum(h), Named("nrep") = nrep));
 
@@ -244,7 +244,7 @@ BEGIN_RCPP
         avec_orig(i) = avec(i) / scalar(i - p);
     }
 
-    if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
+    // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
 
     return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec_orig, Named("nrep") = nrep, Named("dim") = sum(h)));
 
@@ -351,7 +351,7 @@ BEGIN_RCPP
         thetahat = thetahat + theta0;
     }
 
-    if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in qprog!Too many steps! Number of steps:" << nrep << std::endl;}
+    // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in qprog!Too many steps! Number of steps:" << nrep << std::endl;}
 
     return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = thetahat, Named("dim") = n - sum(h), Named("nrep") = nrep));
 

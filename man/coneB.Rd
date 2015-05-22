@@ -6,7 +6,7 @@ This routine implements the hinge algorithm for cone projection to minimize \eqn
 \eqn{C} of the form \eqn{\{\theta: \theta = v + \sum b_i\delta_i,   i = 1,\ldots,m,  b_1,\ldots, b_m \ge 0\}}, \eqn{v} is in \eqn{V}.}
 
 \usage{
-coneB(y, delta, vmat = NULL, w = NULL)
+coneB(y, delta, vmat = NULL, w = NULL, msg = TRUE)
 }
 
 \arguments{
@@ -14,6 +14,7 @@ coneB(y, delta, vmat = NULL, w = NULL)
   \item{delta}{A matrix whose rows are the constraint cone edges. The rows of delta must be irreducible. Its column number must equal the length of \eqn{y}. No row of delta is contained in the column space of vmat.}
   \item{vmat}{A matrix whose columns are the basis of the linear space contained in the constraint cone. Its row number must equal the length of \eqn{y}. The columns of vmat must be linearly independent. The default is vmat = NULL}
   \item{w}{An optional nonnegative vector of weights of length \eqn{n}. If w is not given, all weights are taken to equal 1. Otherwise, the minimization of \eqn{(y - \theta)'w(y - \theta)} over \eqn{C} is returned. The default is w = NULL.}
+  \item{msg}{A logical flag. If msg is TRUE, then a warning message will be printed when there is a non-convergence problem; otherwise no warning message will be printed. The default is msg = TRUE}
 }
 
 \details{The routine coneB dynamically loads a C++ subroutine "coneBCpp". }
@@ -73,8 +74,8 @@ Mary C. Meyer and Xiyue Liao
 #make a plot to compare the unweighted fit and weighted fit
     par(mar = c(4, 4, 1, 1))
     plot(y, cex = .7, ylab = "y")
-    lines(ans3$yhat, col = 2, lty = 2)
-    lines(ans4$yhat, col = 4, lty = 2)
+    lines(fitted(ans3), col = 2, lty = 2)
+    lines(fitted(ans4), col = 4, lty = 2)
     legend("topleft", bty = "n", c("unweighted fit", "weighted fit"), col = c(2, 4), lty = c(2, 2))
     title("ConeB Example Plot")
 }

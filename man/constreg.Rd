@@ -7,7 +7,7 @@ The least-squares regression model \eqn{y = X\beta + \epsilon} is considered, wh
 \eqn{||y - X\beta||^2}, subject to \eqn{A\beta \ge 0}.  }
 
 \usage{
-constreg(y, xmat, amat, w = NULL, test = FALSE)
+constreg(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4)
 }
 
 \arguments{
@@ -16,6 +16,7 @@ constreg(y, xmat, amat, w = NULL, test = FALSE)
   \item{amat}{A constraint matrix. The rows of amat must be irreducible. The column number of amat must equal the length of \eqn{\beta}.}
  \item{w}{An optional nonnegative vector of weights of length \eqn{n}. If w is not given, all weights are taken to equal 1. Otherwise, the minimization of \eqn{(y - X\beta)'w(y - X\beta)} over \eqn{C} is returned. The default is w = NULL.}
   \item{test}{A logical scalar. If test == TRUE, then the p-value for the test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is returned. \eqn{C} is the constraint cone of the form \eqn{\{\beta: A\beta \ge 0\}}, and \eqn{V} is the null space of \eqn{A}. The default is test = FALSE.}  
+  \item{nloop}{ The number of simulations used to get the p-value for the E01 test. The default is 1e+4. }
 }
 
 \value{
@@ -78,7 +79,7 @@ Mary C. Meyer and Xiyue Liao
 
 #call constreg to get constrained coefficient estimates
     ans1 <- constreg(y, xmat, amat)
-    bhat1 <- ans1$coefs
+    bhat1 <- coef(ans1)
 
 #call lm to get unconstrained coefficient estimates
     ans2 <- lm(y ~ xmat[,-1])

@@ -4,11 +4,12 @@
 \description{
 This routine implements the hinge algorithm for cone projection to minimize 
 \eqn{||y - \theta||^2} over the cone \eqn{C} of the form \eqn{\{\theta: A\theta \ge 0\}}. }
-\usage{coneA(y, amat, w = NULL)  }
+\usage{coneA(y, amat, w = NULL, msg = TRUE)  }
 \arguments{
   \item{y}{A vector of length \eqn{n}.}
   \item{amat}{A constraint matrix. The rows of amat must be irreducible. The column number of amat must equal the length of \eqn{y}.}
   \item{w}{An optional nonnegative vector of weights of length \eqn{n}. If w is not given, all weights are taken to equal 1. Otherwise, the minimization of \eqn{(y - \theta)'w(y - \theta)} over \eqn{C} is returned. The default is w = NULL.}
+  \item{msg}{A logical flag. If msg is TRUE, then a warning message will be printed when there is a non-convergence problem; otherwise no warning message will be printed. The default is msg = TRUE}
 }
 
 \details{
@@ -61,8 +62,8 @@ Mary C. Meyer and Xiyue Liao  }
 #make a plot to compare the unweighted fit and the weighted fit
     par(mar = c(4, 4, 1, 1))
     plot(y, cex = .7, ylab = "y")
-    lines(ans1$thetahat, col = 2, lty = 2)
-    lines(ans2$thetahat, col = 4, lty = 2)
+    lines(fitted(ans1), col = 2, lty = 2)
+    lines(fitted(ans2), col = 4, lty = 2)
     legend("topleft", bty = "n", c("unweighted fit", "weighted fit"), col = c(2, 4), lty = c(2, 2))
     title("ConeA Example Plot")  
 }

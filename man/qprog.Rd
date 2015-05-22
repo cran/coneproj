@@ -3,12 +3,13 @@
 \title{Quadratic Programming}
 \description{
 Given a positive definite \eqn{n} by \eqn{n} matrix \eqn{Q} and a constant vector \eqn{c} in \eqn{R^n}, the object is to find \eqn{\theta} in \eqn{R^n} to minimize \eqn{\theta'Q\theta - 2c'\theta} subject to \eqn{A\theta \ge b}, for an irreducible constraint matrix \eqn{A}. This routine transforms into a cone projection problem for the constrained solution. }
-\usage{qprog(q, c, amat, b)}
+\usage{qprog(q, c, amat, b, msg = TRUE)}
 \arguments{
   \item{q}{A \eqn{n} by \eqn{n} positive definite matrix.}
   \item{c}{A vector of length \eqn{n}.}
   \item{amat}{A \eqn{m} by \eqn{n} constraint matrix. The rows of amat must be irreducible.}
   \item{b}{A vector of length \eqn{m}. Its default value is 0.}
+  \item{msg}{A logical flag. If msg is TRUE, then a warning message will be printed when there is a non-convergence problem; otherwise no warning message will be printed. The default is msg = TRUE}
 }
 \details{
 To get the constrained solution to \eqn{\theta'Q\theta - 2c'\theta} subject to \eqn{A\theta \ge b}, this routine makes the Cholesky decomposition of \eqn{Q}. Let \eqn{U'U = Q}, and define \eqn{\phi = U\theta} and \eqn{z = U^{-1}c}, where \eqn{U^{-1}} is the inverse of \eqn{U}.
@@ -75,7 +76,7 @@ Mary C. Meyer and Xiyue Liao
     ans <- qprog(q, c, amat, b)
 
 #get the constrained fit of y
-    betahat <- ans$thetahat
+    betahat <- fitted(ans)
     fitc <- crossprod(t(xmat), betahat)
 
 #get the unconstrained fit of y
@@ -86,7 +87,7 @@ Mary C. Meyer and Xiyue Liao
     plot(x, y, cex = .7, xlab = "x", ylab = "y")
     lines(x, fitted(fitu))
     lines(x, fitc, col = 2, lty = 4)
-    legend("topleft", c("constr.fit", "unconstr.fit"), lty = c(4, 1), col = c(2, 1))
+    legend("topleft", bty = "n", c("constr.fit", "unconstr.fit"), lty = c(4, 1), col = c(2, 1))
     title("Qprog Example Plot")
 }
 
