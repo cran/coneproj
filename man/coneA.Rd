@@ -20,6 +20,7 @@ of \eqn{- A} are the edges of the polar cone \eqn{\Omega^o}. This routine first 
 \item{df}{The dimension of the face of the constraint cone on which the projection lands.}
 \item{thetahat}{The projection of  \eqn{y} on the constraint cone.}
 \item{steps}{The number of iterations before the algorithm converges.}
+\item{xmat}{The rows of the matrix are the edges of the face of the polar cone on which the residual of the projection onto the constraint cone lands.}
 }
 
 \references{

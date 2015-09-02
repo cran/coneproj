@@ -46,7 +46,7 @@ coneA <- function(y, amat, w = NULL, msg = TRUE){
       print ("Fail to converge in conerpoj!nrep > n^2 !")
     }
   }
-  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)
+  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat)
   attr(rslt, "sub") <- "coneA"
   class(rslt) <- "coneproj"
   return (rslt) 

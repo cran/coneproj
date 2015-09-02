@@ -56,7 +56,8 @@ BEGIN_RCPP
     else{check = 1;}
 
     int nrep = 0;
-
+//new:
+    arma::mat xmat_use;
     while(check == 0 & nrep < (n * n)){
         nrep ++ ;
         arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
@@ -88,11 +89,13 @@ BEGIN_RCPP
                 check = 0;
             }
         }
+//new:
+       xmat_use = xmat;
     }
 
     //if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
 
-    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("dim") = n - sum(h), Named("nrep") = nrep));
+    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep));
 
 END_RCPP
 }
@@ -280,7 +283,7 @@ BEGIN_RCPP
         nnc = nc - nq * theta0;
     } 
 
-    else{nnc = nc; }
+    else{nnc = nc;}
 
     arma::mat preu = chol(nq);
     arma::mat u = trimatu(preu); 
