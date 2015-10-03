@@ -22,6 +22,7 @@ The routine qprog dynamically loads a C++ subroutine "qprogCpp".
 \item{df}{The dimension of the face of the constraint cone on which the projection lands.}
 \item{thetahat}{A vector minimizing \eqn{\theta'Q\theta - 2c'\theta}.}
 \item{steps}{The number of iterations before the algorithm converges.}
+\item{xmat}{The rows of the matrix are the edges of the face of the polar cone on which the residual of the projection onto the constraint cone lands.}
 }
 \references{
 Goldfarb, D. and A. Idnani (1983) A numerically stable dual method for solving strictly convex quadratic programs.

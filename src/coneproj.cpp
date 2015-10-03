@@ -312,7 +312,8 @@ BEGIN_RCPP
     else{check = 1;}
 
     int nrep = 0;
-
+//new:
+    arma::mat xmat_use;
     while(check == 0 & nrep < (n * n)){
         nrep ++ ;
        // if(nrep > (n * n)){
@@ -346,6 +347,8 @@ BEGIN_RCPP
                 check = 0;
             }
         }
+	//new:
+    	xmat_use = xmat;
     }
 
     arma::colvec thetahat = solve(u, z - phi);
@@ -356,7 +359,7 @@ BEGIN_RCPP
 
     // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in qprog!Too many steps! Number of steps:" << nrep << std::endl;}
 
-    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = thetahat, Named("dim") = n - sum(h), Named("nrep") = nrep));
+    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = thetahat, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep));
 
 END_RCPP
 }

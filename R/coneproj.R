@@ -149,7 +149,7 @@ qprog <- function(q, c, amat, b, msg = TRUE) {
         }
     }
   }
-  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep)
+  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat)
   attr(rslt, "sub") <- "qprog"
   class(rslt) <- "coneproj"
   return (rslt) 
