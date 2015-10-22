@@ -233,9 +233,14 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
   #get unconstrained fit
   fhatuc <- pmat %*% y
   #use QR decomposition to get fit under H0
-  ansq <- qrdecomp(t(atil))
-  atilq <- ansq$qm
-  z0 <- z - atilq %*% t(atilq) %*% z
+  #ansq <- qrdecomp(t(atil))
+  #atilq <- ansq$qm
+  #z0 <- z - atilq %*% t(atilq) %*% z
+#new:
+  vmat = qr.Q(qr(t(atil)), complete = TRUE)[, -(1:(qr(t(atil))$rank)), drop = FALSE]
+  pvmat = vmat %*% solve(crossprod(vmat), t(vmat))
+  z0 = pvmat %*% z 
+
   yhat0 <- xmat %*% uinv %*% z0
   sse0 <- sum((y - yhat0)^2)
   sse1 <- sum((y - fhatc)^2)
