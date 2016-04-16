@@ -1,6 +1,6 @@
-c73fd2bbbf715c849c85d097d64a1473 *DESCRIPTION
+76a7eba420fcccf59f3ecabfa91d9464 *DESCRIPTION
 ac0121ef721efdcc39bab46b33c08f67 *NAMESPACE
-ac6d6acad63e96bfa5be936f77860077 *R/coneproj.R
+2eefc76f2daab130cc3386c6538e96f6 *R/coneproj.R
 6c47022af5f00352baf82f954b97620c *data/FEV.rda
 6f81a786501f736f47a862ea5bf3c3ab *data/TwoDamat.rda
 4355ceabc8055a2a009d05e7486da496 *data/cubic.rda
@@ -10,9 +10,9 @@ beb0d6dec4a4bedf727c10c88e35f3d3 *inst/CITATION
 5e6264ae028b289439d2009e8e431c22 *man/TwoDamat.Rd
 2af60f492130328ef50a99c61ecc36ea *man/check_irred.Rd
 6b32d01eba8c7e860e9cf186a71b1fee *man/conc.Rd
-787f127ee4753c861f3c4f41b7d09293 *man/coneA.Rd
-a975ed3f74359d78433a4c36c39af136 *man/coneB.Rd
-45546d025571dacd5e7162d71d4277a7 *man/constreg.Rd
+c948fce630e731410f92ade9442d584a *man/coneA.Rd
+4c53a70bccb55e99393366518c6aec91 *man/coneB.Rd
+86b9fe2380ae4f17a3f20af718c9b780 *man/constreg.Rd
 5f82d47ab1f8747e683731e947674d7d *man/conv.Rd
 89d082c1fbb5027055c6c55d975676d4 *man/cubic.Rd
 3270debd57e63b5f3c4566d9000fa0b2 *man/decr.Rd
@@ -22,8 +22,8 @@ cb83f3a31746edf19d498374dbc68e6f *man/feet.Rd
 63e2a24f57638674f6b822b22d06ca0e *man/incr.Rd
 99af97fab6fe3110b34ebd9aa7f8f70e *man/incr.conc.Rd
 289950b14917ec30e0f186c5cd4d1c38 *man/incr.conv.Rd
-0f0de866f6f2032dc8aa95b279664a02 *man/qprog.Rd
-1a27c7453986dd22d64192f9995d6468 *man/shapereg.Rd
+30f61b40306b231a45f4242dd9602176 *man/qprog.Rd
+303e3c1ec23c5f38bb795c5afec966d8 *man/shapereg.Rd
 489b262d4f81136a32f0bb09936fe53e *src/Makevars
 a2762b0003a9dd97f0904dc84fb72563 *src/Makevars.win
 b35ab890f74fbb10c5d919392dc0ba42 *src/coneproj.cpp

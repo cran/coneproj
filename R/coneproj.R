@@ -242,8 +242,14 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
   z0 = pvmat %*% z 
 
   yhat0 <- xmat %*% uinv %*% z0
-  sse0 <- sum((y - yhat0)^2)
-  sse1 <- sum((y - fhatc)^2)
+#new: include weighted case: already checked w
+  if (!is.null(w)) { 
+    sse0 <- sum(w * (y - yhat0)^2)
+    sse1 <- sum(w * (y - fhatc)^2)
+  } else {
+    sse0 <- sum((y - yhat0)^2)
+    sse1 <- sum((y - fhatc)^2)
+  }
   bval <- (sse0 - sse1) / sse0
   g <- qr(atil)
   dim0 <- m - g$rank
@@ -255,7 +261,12 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
       mdist <- 0:m*0
       for (iloop in 1:nloop) {
         ys <- rnorm(n)
-        z <- t(uinv) %*% t(xmat) %*% ys
+#new: include weighted case: already checked w
+        if (!is.null(w)) {
+	  z <- t(uinv) %*% t(xmat) %*% w %*% ys
+	} else {
+          z <- t(uinv) %*% t(xmat) %*% ys
+        }
         ans <- coneA(z, atil)
         l <- ans$df + 1
         mdist[l] <- mdist[l] + 1
@@ -280,9 +291,10 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
   return (rslt)	
 }
 
-##########################
-#shape-restricted routine#
-##########################
+############################
+#shape-restricted routine  #
+#to be consistent with cgam#
+############################
 shapereg <- function(formula, data = NULL, weights = NULL, test = FALSE, nloop = 1e+4) {
   cl <- match.call()
   mf <- match.call(expand.dots = FALSE)
@@ -296,7 +308,7 @@ shapereg <- function(formula, data = NULL, weights = NULL, test = FALSE, nloop =
   shape <- NULL
   t <- NULL
   tnm <- NULL
-  zmat <- NULL; zid <- NULL; zid0 <- NULL; zid1 <- NULL; zid2 <- NULL; znms <- NULL; is_fac <- NULL; vals <- NULL; dist <- 0
+  zmat <- NULL; zid <- NULL; zid1 <- NULL; zid2 <- NULL; znms <- NULL; is_param <- NULL; is_fac <- NULL; vals <- NULL; st <- 1; ed <- 1
   for (i in 2: ncol(mf)) {
     if (is.numeric(attributes(mf[,i])$shape)) {
       shape <- c(shape, attributes(mf[,i])$shape)
@@ -308,71 +320,65 @@ shapereg <- function(formula, data = NULL, weights = NULL, test = FALSE, nloop =
         znms <- c(znms, names(mf)[i])
       }
       if (!is.matrix(mf[,i])) {
-        zid <- c(zid, i)
-        if (is.factor(mf[,i])) {
-	  is_fac <- c(is_fac, TRUE)
-#new: check
-	  ch_char <- suppressWarnings(is.na(as.numeric(levels(mf[,i]))))
-          if (any(ch_char)) {
-            vals <- c(vals, unique(levels(mf[,i]))[2])
+          zid <- c(zid, i)
+	  is_param <- c(is_param, TRUE)
+          if (is.factor(mf[,i])) {
+	    is_fac <- c(is_fac, TRUE)
+	    ch_char <- suppressWarnings(is.na(as.numeric(levels(mf[, i]))))
+            if (any(ch_char)) {
+	      vals <- c(vals, unique(levels(mf[, i]))[-1])
+            } else {
+	      vals <- c(vals, as.numeric(levels(mf[, i]))[-1])
+	    }
+            nlvs <- length(attributes(mf[,i])$levels)
+	    ed <- st + nlvs - 2 
+	    zid1 <- c(zid1, st)
+	    zid2 <- c(zid2, ed)
+	    st <- st + nlvs - 1
+	    zmat0 <- model.matrix(~ mf[, i])[, -1, drop = FALSE]
+	    zmat <- cbind(zmat, zmat0)
           } else {
-	      vals <- c(vals, min(as.numeric(levels(mf[,i]))))
-	  }
-          nlvs <- length(attributes(mf[,i])$levels)
-          zid0 <- i + 0:(nlvs - 2) + dist
-	  zid1 <- c(zid1, i + dist)
-	  zid2 <- c(zid2, i + nlvs - 2 + dist)
-          dist <- nlvs - 2
-	  zmat0 <- as.matrix(model.matrix(mt, mf)[,zid0], ncol = (length(zmat0) / length(y)))
+	    is_fac <- c(is_fac, FALSE)
+            zmat <- cbind(zmat, mf[, i])
+	    ed <- st
+            zid1 <- c(zid1, st)
+	    zid2 <- c(zid2, ed) 
+	    st <- st + 1
+	    vals <- c(vals, "")
+         }
+      } else {
+	  is_param <- c(is_param, FALSE)
+          is_fac <- c(is_fac, FALSE)
+	  zmat0 <- mf[, i]
 	  mat_cols <- ncol(zmat0)
 	  mat_rm <- NULL
-	  rm_num <- 0
+	  #rm_num <- 0
 	  for (irm in 1:mat_cols) {
-       	    if (all(round(diff(zmat0[, irm]), 8) == 0)) {
-              mat_rm <- c(mat_rm, irm)
-            }
+       	  	if (all(round(diff(zmat0[, irm]), 8) == 0)) {
+                	mat_rm <- c(mat_rm, irm)
+          	}
    	  }
 	  if (!is.null(mat_rm)) {
-	    zmat0 <- zmat0[, -mat_rm, drop = FALSE]
-	    rm_num <- rm_num + length(mat_rm)
+	  	zmat0 <- zmat0[, -mat_rm, drop = FALSE]
+		#rm_num <- rm_num + length(mat_rm)
 	  }
 	  zmat <- cbind(zmat, zmat0)
-       } else {
-           is_fac <- c(is_fac, FALSE)
-	   zmat <- cbind(zmat, mf[,i])
-	   zid1 <- c(zid1, i + dist)
-	   zid2 <- c(zid2, i + dist)
-       }
-     } else {
-         is_fac <- c(is_fac, TRUE)
-	 zmat0 <- mf[,i]
-	 mat_cols <- ncol(zmat0)
-	 mat_rm <- NULL
-	 rm_num <- 0
-	 for (irm in 1:mat_cols) {
-       	   if (all(round(diff(zmat0[, irm]), 8) == 0)) {
-             mat_rm <- c(mat_rm, irm)
-           }
-   	 }
-	 if (!is.null(mat_rm)) {
-	   zmat0 <- zmat0[, -mat_rm, drop = FALSE]
-	   rm_num <- rm_num + length(mat_rm)
-	 }
-	 zmat <- cbind(zmat, zmat0)
-	 vals <- c(vals, 1)
-	 zid1 <- c(zid1, i + dist)
-	 zid2 <- c(zid2, i + ncol(mf[,i]) - 1 + dist - rm_num)
-	 zid <- c(zid, i)
-         dist <- ncol(mf[,i]) - 1
-     }
-   }
+	  vals <- c(vals, 1)
+	  zid <- c(zid, i)
+	  nlvs <- ncol(zmat0) + 1
+	  ed <- st + nlvs - 2
+	  zid1 <- c(zid1, st)
+	  zid2 <- c(zid2, ed)
+	  st <- st + nlvs - 1
+      }
+    }  
   }
   if (!test & nloop > 0) {
 	nloop <- 0
   	#print ("nloop > 0, test should be TRUE!")
   }
   ans <- shapereg.fit(y, t, shape, xmat = zmat, w = weights, test = test, nloop = nloop)
-  rslt <- list(coefs = ans$coefs, constr.fit = ans$constr.fit, linear.fit = ans$linear.fit, se.beta = ans$se.beta, pval = ans$pval, pvals.beta = ans$pvals.beta, test = ans$test, SSE0 = ans$SSE0, SSE1 = ans$SSE1, shape = shape, tms = mt, zid = zid, vals = vals, zid1 = zid1, zid2 = zid2, tnm = tnm,  ynm = ynm, znms = znms, is_fac = is_fac, xmat = zmat)
+  rslt <- list(coefs = ans$coefs, constr.fit = ans$constr.fit, linear.fit = ans$linear.fit, se.beta = ans$se.beta, pval = ans$pval, pvals.beta = ans$pvals.beta, test = ans$test, SSE0 = ans$SSE0, SSE1 = ans$SSE1, shape = shape, tms = mt, zid = zid, vals = vals, zid1 = zid1, zid2 = zid2, tnm = tnm,  ynm = ynm, znms = znms, is_param = is_param, is_fac = is_fac, xmat = zmat)
   rslt$call <- match.call()		
   attr(rslt, "sub") <- "shapereg"
   class(rslt) <- "coneproj"
@@ -442,24 +448,32 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
   duse <- bvec > 1e-8
   if (sum(duse) >= 1) {
     delsm <- delta[duse, , drop = FALSE]
-    bmat <- cbind(rep(1, n), nxmat, t(delsm))
+#debug: include vmat in bmat, not only z's
+    #bmat <- cbind(rep(1, n), nxmat, t(delsm))
+    bmat <- cbind(vmat, t(delsm))
   } else {
-    bmat <- cbind(rep(1, n), nxmat) 
+    #bmat <- cbind(rep(1, n), nxmat) 
+    bmat <- vmat
   }
   #find H0 fit
   vhat <- vmat %*% coefx	
   theta <- t(delta) %*% bvec
   #find H1 fit
   yhat <- theta + vhat 
-  sse0 <- sum((y - vhat)^2) 
-  sse1 <- sum((y - ans$yhat)^2)
+#debug: include weighted case in sse0 and sse1
+  if (is.null(w)) {
+    w <- 1:n*0 + 1
+  }
+  sse0 <- sum(w * (y - vhat)^2) 
+  sse1 <- sum(w * (y - ans$yhat)^2)
   bval <- (sse0 - sse1) / sse0
   dim0 <- qr(vmat)$rank
   sm <- 1e-8
   m <- length(delta) / n + length(vmat) / n
   #find the approximate covariance matrix for beta 
+#new: use ans$df is (n - 1.5 * ans$df) <= 0
   if ((n - 1.5 * ans$df) <= 0) {
-    sdhat2 <- sse1
+    sdhat2 <- sse1 / ans$df 
   } else {
     sdhat2 <- sse1 / (n - 1.5 * ans$df)
   }
@@ -470,21 +484,33 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
   } else {
     pb <- 1 + ncol(nxmat)
   }
-  se2 <- solve(crossprod(bmat)) * sdhat2
+#debug: include weighted case in se2  
+  #se2 <- solve(crossprod(bmat)) * sdhat2
+  se2 <- solve(t(bmat) %*% diag(w) %*% bmat) * sdhat2
   se.beta <- rep(0, pb)
   tstat <- rep(0, pb)
   #find the approximate p-values for beta
   pvals.beta <- rep(0, pb)
-#new code: n - 1.5 * ans$df must be positive
-  if ((n - 1.5 * ans$df) <= 0) {
-      print ("Degree of Freedom is non-positive! P-value(s) for Beta cannot be computed!")
-      pvals.beta <- NULL
-  } else {
-      for (i in 1:pb) {
-        se.beta[i] <- sqrt(se2[i, i])
-        tstat[i] <- coefb[i] / se.beta[i]
+#new: consistent with cgam
+  #if ((n - 1.5 * ans$df) <= 0) {
+  #    warning ('Effective degrees of freedom is close to the number of observations! Inference about parametric covariates is not reliable!')
+  #    #pvals.beta <- NULL
+  #} else {
+  #    for (i in 1:pb) {
+  #      se.beta[i] <- sqrt(se2[i, i])
+  #      tstat[i] <- coefb[i] / se.beta[i]
+  #      pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), n - 1.5 * ans$df))
+  #    }
+  #}
+  for (i in 1:pb) {
+    se.beta[i] <- sqrt(se2[i, i])
+    tstat[i] <- coefb[i] / se.beta[i]
+    if ((n - 1.5 * ans$df) <= 0) {
+      pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), ans$df))
+      warning ('Effective degrees of freedom is close to the number of observations! Inference about parametric covariates is not reliable!')
+    } else {
         pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), n - 1.5 * ans$df))
-      }
+    }
   }
   #find the p-value for E01 test 
   if (test) {
@@ -650,9 +676,10 @@ makedelta <- function(x, sh) {
   return (delta)
 }
 
-#########
-#summary#
-######### 
+############################
+#summary                   #
+#to be consistent with cgam#
+############################
 summary.coneproj <- function(object,...) {
   sub <- attributes(object)$sub
   if (sub == "shapereg") {
@@ -661,62 +688,51 @@ summary.coneproj <- function(object,...) {
 		se <- object$se.beta
 		tval <- coefs / se
 		pvalbeta <- object$pvals.beta
-#new:
-#if (is.null(pvalbeta)) {
-#	stop ("No P-value(s) for Beta! Summary table is not available!")
-#}
 		pval <- object$pval
 		n <- length(coefs)
 		sse0 <- object$SSE0
 		sse1 <- object$SSE1
 		zid <- object$zid
 		shape <- object$shape
-		zid1 <- object$zid1 - 1 - length(shape)
-		zid2 <- object$zid2 - 1 - length(shape)
+		#zid1 <- object$zid1 - 1 - length(shape)
+		#zid2 <- object$zid2 - 1 - length(shape)
+		zid1 <- object$zid1
+		zid2 <- object$zid2
 		tms <- object$tms
 		zmat <- object$xmat
+		is_param <- object$is_param
 		is_fac <- object$is_fac
 		vals <- object$vals
 		test <- object$test
 #new:
-rslt1 <- rslt2 <- NULL
-if (!is.null(pvalbeta)) {
-		rslt1 <- data.frame("Estimate" = round(coefs, 4), "StdErr" = round(se, 4), "t.value" = round(tval, 4), "p.value" = round(pvalbeta, 4))
-		rownames(rslt1)[1] <- "(Intercept)"
-		if (n > 1) {
-			if (is.null(colnames(zmat)) | any(colnames(zmat) == "")) {
-				lzid <- length(zid1) 
+		rslt1 <- rslt2 <- NULL
+		if (!is.null(pvalbeta)) {
+			rslt1 <- data.frame("Estimate" = round(coefs, 4), "StdErr" = round(se, 4), "t.value" = round(tval, 4), "p.value" = round(pvalbeta, 4))
+			rownames(rslt1)[1] <- "(Intercept)"
+			if (n > 1) {
+				lzid <- length(zid1)
 				for (i in 1:lzid) {
-					pos1 <- zid1[i]; pos2 <- zid2[i];
-					lvals <- length(vals) 
-					for (k in 1:lvals) {vali <- vals[k]} 
-#lvs <- vali+1
-#new: check!!
-					if (is.numeric(vali)) {
-						lvs <- vali + 1
-					} else {
-						lvs <- vali 
-					}
+					pos1 <- zid1[i]; pos2 <- zid2[i]
 					for (j in pos1:pos2) {
-						if (!is_fac[i]) {
-							rownames(rslt1)[j + 1] <- attributes(tms)$term.labels[zid[i] - 1]
+						if (!is_param[i]) {
+							rownames(rslt1)[j + 1] <- paste(attributes(tms)$term.labels[zid[i] - 1], rownames(rslt1)[j + 1], sep = "")							
 						} else {
-							rownames(rslt1)[j + 1] <- paste(attributes(tms)$term.labels[zid[i] - 1], lvs, sep = "")
+							rownames(rslt1)[j + 1] <- paste(attributes(tms)$term.labels[zid[i] - 1], vals[j], sep = "")					
 						}	
 					}
 				}
-			} else {
-				rownames(rslt1)[2:n] <- colnames(zmat)
 			}
-		}
-		rslt1 <- as.matrix(rslt1)
-} 
+			rslt1 <- as.matrix(rslt1)
+		} 
 		if (!is.null(sse0) & !is.null(sse1)) {
-			rslt2 <- cbind(SSE.Linear = sse0, SSE.Full = sse1)
+			#rslt2 <- cbind(SSE.Linear = sse0, SSE.Full = sse1)
+#new:
+			rslt2 <- data.frame("SSE.Linear" = sse0, "SSE.Full" = sse1)
 			if (test) {
 			      PVAL <- object$pval
 			      rslt2 <- cbind(rslt2, "P.value.f(t)" = PVAL)
 		        } 
+			rownames(rslt2)[1] <- ""
 #new:
 			if (!is.null(rslt1)) {
 				ans <- list(call = object$call, coefficients = rslt1, residuals = rslt2, zcoefs = coefs) 
@@ -765,10 +781,13 @@ print.summary.coneproj <- function(x,...)
     cat("Coefficients:")
     cat("\n")
     printCoefmat(x$coefficients, P.values = TRUE, has.Pvalue = TRUE)
-    cat("==============================================================", "\n")
-    cat("Call:\n")
-    print(x$call)
-    cat("\n")
+    #cat("==============================================================", "\n")
+    #cat("Call:\n")
+    #print(x$call)
+    #cat("\n")
+    cat("+--------------------------------------+\n")
+    cat("|         SSE.Linear vs SSE.Full       |\n")
+    cat("+--------------------------------------+\n")
     printCoefmat(x$residuals, P.values = TRUE, has.Pvalue = TRUE)
   } else {
    #print ("not shapereg!") 

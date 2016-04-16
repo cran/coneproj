@@ -40,14 +40,14 @@ Mary C. Meyer and Xiyue Liao  }
 \code{\link{coneB}}, \code{\link{constreg}}, \code{\link{qprog}}  }
 
 \examples{
-#generate y
+# generate y
     set.seed(123)
     n <- 50
     x <- seq(-2, 2, length = 50)
     y <- - x^2 + rnorm(n)
 
-#create the constraint matrix to make the first half of y monotonically increasing
-#and the second half of y monotonically decreasing
+# create the constraint matrix to make the first half of y monotonically increasing
+# and the second half of y monotonically decreasing
     amat <- matrix(0, n - 1, n)
     for(i in 1:(n/2 - 1)){
        amat[i, i] <- -1; amat[i, i + 1] <- 1
@@ -56,11 +56,11 @@ Mary C. Meyer and Xiyue Liao  }
        amat[i, i] <- 1; amat[i, i + 1] <- -1
     }
 
-#call coneA
+# call coneA
     ans1 <- coneA(y, amat)
     ans2 <- coneA(y, amat, w = (1:n)/n)
 
-#make a plot to compare the unweighted fit and the weighted fit
+# make a plot to compare the unweighted fit and the weighted fit
     par(mar = c(4, 4, 1, 1))
     plot(y, cex = .7, ylab = "y")
     lines(fitted(ans1), col = 2, lty = 2)

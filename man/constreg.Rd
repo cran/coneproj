@@ -3,7 +3,7 @@
 \title{Constrained Parametric Regression}
 
 \description{
-The least-squares regression model \eqn{y = X\beta + \epsilon} is considered, where the object is to find \eqn{\beta} to minimize
+The least-squares regression model \eqn{y = X\beta + \varepsilon} is considered, where the object is to find \eqn{\beta} to minimize
 \eqn{||y - X\beta||^2}, subject to \eqn{A\beta \ge 0}.  }
 
 \usage{
@@ -16,7 +16,7 @@ constreg(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4)
   \item{amat}{A constraint matrix. The rows of amat must be irreducible. The column number of amat must equal the length of \eqn{\beta}.}
  \item{w}{An optional nonnegative vector of weights of length \eqn{n}. If w is not given, all weights are taken to equal 1. Otherwise, the minimization of \eqn{(y - X\beta)'w(y - X\beta)} over \eqn{C} is returned. The default is w = NULL.}
   \item{test}{A logical scalar. If test == TRUE, then the p-value for the test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is returned. \eqn{C} is the constraint cone of the form \eqn{\{\beta: A\beta \ge 0\}}, and \eqn{V} is the null space of \eqn{A}. The default is test = FALSE.}  
-  \item{nloop}{ The number of simulations used to get the p-value for the E01 test. The default is 1e+4. }
+  \item{nloop}{ The number of simulations used to get the p-value for the \eqn{E_{01}} test. The default is 1e+4. }
 }
 
 \value{
@@ -27,7 +27,7 @@ constreg(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4)
 }
 
 \details{
-The hypothesis test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is an exact one-sided test, and the test statistic is \eqn{E_{01} = (SSE_0 - SSE_1)/SSE_0}, which has a mixture-of-betas distribution when \eqn{H_0} is true and \eqn{\epsilon} is a vector following a standard multivariate normal distribution with mean \eqn{0}. The mixing parameters are found through simulations. The number of simulations used to obtain the mixing distribution parameters for the test is 10,000. Such simulations usually take some time. For the "FEV" data set used as an example in this section, whose sample size is 654, the time to get a p-value is roughly 6 seconds.
+The hypothesis test \eqn{H_0:\beta} is in \eqn{V} versus \eqn{H_1:\beta} is in \eqn{C} is an exact one-sided test, and the test statistic is \eqn{E_{01} = (SSE_0 - SSE_1)/SSE_0}, which has a mixture-of-betas distribution when \eqn{H_0} is true and \eqn{\varepsilon} is a vector following a standard multivariate normal distribution with mean \eqn{0}. The mixing parameters are found through simulations. The number of simulations used to obtain the mixing distribution parameters for the test is 10,000. Such simulations usually take some time. For the "FEV" data set used as an example in this section, whose sample size is 654, the time to get a p-value is roughly 6 seconds.
 
 The constreg function calls coneA for the cone projection part.
 }
@@ -55,37 +55,37 @@ Mary C. Meyer and Xiyue Liao
 }
 
 \examples{
-#load the FEV data set
+# load the FEV data set
     data(FEV)
 
-#extract the variables
+# extract the variables
     y <- FEV$FEV
     age <- FEV$age
     height <- FEV$height
     sex <- FEV$sex
     smoke <- FEV$smoke
 
-#scale age and height
+# scale age and height
     scale_age <- (age - min(age)) / (max(age) - min(age))
     scale_height <- (height - min(height)) / (max(height) - min(height))
 
-#make xmat
+# make xmat
     xmat <- cbind(1, scale_age, scale_height, scale_age * scale_height, sex, smoke)
 
-#make the constraint matrix 
+# make the constraint matrix 
     amat <- matrix(0, 4, 6)
     amat[1, 2] <- 1; amat[2, 2] <- 1; amat[2, 4] <- 1 
     amat[3, 3] <- 1; amat[4, 3] <- 1; amat[4, 4] <- 1
 
-#call constreg to get constrained coefficient estimates
+# call constreg to get constrained coefficient estimates
     ans1 <- constreg(y, xmat, amat)
     bhat1 <- coef(ans1)
 
-#call lm to get unconstrained coefficient estimates
+# call lm to get unconstrained coefficient estimates
     ans2 <- lm(y ~ xmat[,-1])
     bhat2 <- coef(ans2)
 
-#create a 3D plot to show the constrained fit and the unconstrained fit 
+# create a 3D plot to show the constrained fit and the unconstrained fit 
     n <- 25
     xgrid <- seq(0, 1, by = 1/n)
     ygrid <- seq(0, 1, by = 1/n)
