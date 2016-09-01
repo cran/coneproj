@@ -1,5 +1,5 @@
-
 // includes from the plugin
+//#define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
 
@@ -124,6 +124,8 @@ BEGIN_RCPP
     arma::mat theta(n, 1);
 
     float sm = 1e-8;
+//new: test!
+    //float sm = 1e-5;
     int check = 0;
 
     arma::colvec scalar(m);
@@ -187,8 +189,12 @@ BEGIN_RCPP
 	}        
 	return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec, Named("nrep") = nrep, Named("dim") = sum(h)));
     }
- 
-    while(check == 0 & nrep < (n * n)){
+//new: 
+    //int upper = n*n - 1;
+    //int upper = 1000;
+   // while(check == 0 & nrep < (n * n)){
+//double sc = 0;
+   while(check == 0 & nrep < 1e+6){
         nrep ++;
         //if(nrep > (n * n)){
           // throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));
@@ -200,56 +206,77 @@ BEGIN_RCPP
         for(int k = 0; k < indice.n_elem; k ++){
             xmat.row(k) = sigma.row(indice(k));
         }
- 
+ 	//double sc = arma::norm(xmat * xmat.t(), 2);
         a = solve(xmat * xmat.t(), xmat * ny);
-        arma::colvec a_sub(a.n_elem - p);
+//new: 
+	if (a.n_elem > p) {
+            arma::colvec a_sub(a.n_elem - p);
 
-        for(int i = p; i <= a.n_elem - 1; i ++){
-            a_sub(i-p) = a(i);
-        }
-
-        if(min(a_sub) < (- sm)){
-            arma::colvec avec(m + p); avec.fill(0);
-            avec.elem(find(h == 1)) = a;
-            arma::colvec avec_sub(m);
-
-            for(int i = p; i <= p + m - 1; i ++){
-                avec_sub(i-p) = avec(i);
+            for(int i = p; i <= a.n_elem - 1; i ++){
+                a_sub(i-p) = a(i);
             }
 
-            int i = max(obs.elem(find(avec == min(avec_sub))));
-            h(i) = 0;
-            check = 0;
-        }
- 
-        if(min(a_sub) > (-sm)){
-            check = 1;
-            theta = xmat.t() * a;
-            b2 = sigma * (ny - theta) / n;
+            if(min(a_sub) < (- sm)){
+                arma::colvec avec(m + p); avec.fill(0);
+                avec.elem(find(h == 1)) = a;
+                arma::colvec avec_sub(m);
 
-            if(max(b2) > 2 * sm){
-                int i = min(obs.elem(find(b2 == max(b2))));
+                for(int i = p; i <= p + m - 1; i ++){
+                    avec_sub(i-p) = avec(i);
+                }
+
+                int i = max(obs.elem(find(avec == min(avec_sub))));
+                h(i) = 0;
                 check = 0;
-                h(i) = 1;
             }
-        }
-    }
-
-    arma::colvec avec(m + p); avec.fill(0);
-    avec.elem(find(h == 1)) = a;
-    arma::colvec avec_orig(m + p); avec_orig.fill(0);
  
-    for(int i = 0; i < p; i ++){
-        avec_orig(i) = avec(i);
-    }
+            if(min(a_sub) > (-sm)){
+                check = 1;
+                theta = xmat.t() * a;
+                b2 = sigma * (ny - theta) / n;
+//arma::mat sc0 = sqrt(b2.t() * b2);
+//sc = sqrt(sc0(0,0));
+//sc = arma::as_scalar(b2.t() * b2);
+                //if(max(b2) > 2 * sc * sm){
+		//if((max(b2) * sc) > 2 * sm){
+		if(max(b2) > 2 * sm){
+                    int i = min(obs.elem(find(b2 == max(b2))));
+                    check = 0;
+                    h(i) = 1;
+                }
+            }
+       } else {
+            check = 1;
+       }
+//new: avoid the mismatch problem
+       if (nrep == 1e+6) {
+            arma::colvec indiceEnd = arma::linspace(0, sigma.n_rows-1, sigma.n_rows); 
+       	    indiceEnd = indiceEnd.elem(find(h == 1));
+            arma::mat xmat(indiceEnd.n_elem, sigma.n_cols); xmat.fill(0);
+            for(int k = 0; k < indiceEnd.n_elem; k ++){
+                xmat.row(k) = sigma.row(indiceEnd(k));
+            }
+            //sc = norm(xmat * xmat.t(), 2);
+            a = solve(xmat * xmat.t(), xmat * ny);
+	    theta = xmat.t() * a;
+       }
+   }
+
+   arma::colvec avec(m + p); avec.fill(0);
+   avec.elem(find(h == 1)) = a;
+   arma::colvec avec_orig(m + p); avec_orig.fill(0);
+ 
+   for(int i = 0; i < p; i ++){
+      avec_orig(i) = avec(i);
+   }
 	
-    for(int i = p; i < (m + p); i ++){
-        avec_orig(i) = avec(i) / scalar(i - p);
-    }
+   for(int i = p; i < (m + p); i ++){
+      avec_orig(i) = avec(i) / scalar(i - p);
+   }
 
-    // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
+   // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
 
-    return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec_orig, Named("nrep") = nrep, Named("dim") = sum(h)));
+   return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec_orig, Named("nrep") = nrep, Named("dim") = sum(h)));
 
 END_RCPP
 }

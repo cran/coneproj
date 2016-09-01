@@ -1,6 +1,7 @@
-76a7eba420fcccf59f3ecabfa91d9464 *DESCRIPTION
+2c4f76a65385ee5feb81a528a79acb84 *ChangeLog
+e0d105214499bee2b99bc62057bcfe7f *DESCRIPTION
 ac0121ef721efdcc39bab46b33c08f67 *NAMESPACE
-2eefc76f2daab130cc3386c6538e96f6 *R/coneproj.R
+904786719c5861f68eac7e1ad378f83a *R/coneproj.R
 6c47022af5f00352baf82f954b97620c *data/FEV.rda
 6f81a786501f736f47a862ea5bf3c3ab *data/TwoDamat.rda
 4355ceabc8055a2a009d05e7486da496 *data/cubic.rda
@@ -26,4 +27,4 @@ cb83f3a31746edf19d498374dbc68e6f *man/feet.Rd
 303e3c1ec23c5f38bb795c5afec966d8 *man/shapereg.Rd
 489b262d4f81136a32f0bb09936fe53e *src/Makevars
 a2762b0003a9dd97f0904dc84fb72563 *src/Makevars.win
-b35ab890f74fbb10c5d919392dc0ba42 *src/coneproj.cpp
+dd86f28742c08556f2f5ebb3a2d36eb1 *src/coneproj.cpp

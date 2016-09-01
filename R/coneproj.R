@@ -240,7 +240,6 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
   vmat = qr.Q(qr(t(atil)), complete = TRUE)[, -(1:(qr(t(atil))$rank)), drop = FALSE]
   pvmat = vmat %*% solve(crossprod(vmat), t(vmat))
   z0 = pvmat %*% z 
-
   yhat0 <- xmat %*% uinv %*% z0
 #new: include weighted case: already checked w
   if (!is.null(w)) { 
@@ -443,7 +442,6 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
     coefb <- coefx[-pv]
   } else {coefb <- coefx}
   bvec <- ans$coefs[(pv + 1):(pv + nd)]
-
 #new code to get se(alpha):
   duse <- bvec > 1e-8
   if (sum(duse) >= 1) {
@@ -472,10 +470,11 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
   m <- length(delta) / n + length(vmat) / n
   #find the approximate covariance matrix for beta 
 #new: use ans$df is (n - 1.5 * ans$df) <= 0
-  if ((n - 1.5 * ans$df) <= 0) {
+  #if ((n - 1.5 * ans$df) <= 0) {
+  if ((n - dim0 - 1.5 * ans$df) <= 0) {
     sdhat2 <- sse1 / ans$df 
   } else {
-    sdhat2 <- sse1 / (n - 1.5 * ans$df)
+    sdhat2 <- sse1 / (n - dim0 - 1.5 * ans$df)
   }
 #new code: se(alpha)
   #se2 <- solve(crossprod(vmat)) * sdhat2
@@ -505,11 +504,11 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
   for (i in 1:pb) {
     se.beta[i] <- sqrt(se2[i, i])
     tstat[i] <- coefb[i] / se.beta[i]
-    if ((n - 1.5 * ans$df) <= 0) {
+    if ((n - dim0 - 1.5 * ans$df) <= 0) {
       pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), ans$df))
       warning ('Effective degrees of freedom is close to the number of observations! Inference about parametric covariates is not reliable!')
     } else {
-        pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), n - 1.5 * ans$df))
+        pvals.beta[i] <- 2 * (1 - pt(abs(tstat[i]), n - dim0 - 1.5 * ans$df))
     }
   }
   #find the p-value for E01 test 
@@ -655,10 +654,10 @@ makedelta <- function(x, sh) {
     }
     atil <- amat %*% wmat
     delta <- t(wmat %*% t(atil) %*% solve(atil %*% t(atil)))
-    } else {
+  } else {
       delta <- t(t(amat) %*% solve(amat %*% t(amat)))
-      } 
-      dr <- length(delta) / n
+  } 
+  dr <- length(delta) / n
   if (sh > 2 & sh < 5) {
     pr1 <- cbind(1:n * 0 + 1, x)
     prmat <- pr1 %*% solve(crossprod(pr1), t(pr1))
@@ -669,7 +668,7 @@ makedelta <- function(x, sh) {
       for (i in 1:dr) {
         delta[i, ] <- delta[i, ] - mean(delta[i, ])
       }
-    }
+  }
   for (i in 1:dr) {
     delta[i, ] <- delta[i, ] / sqrt(sum(delta[i, ]^2))
   }
@@ -799,6 +798,7 @@ print.summary.coneproj <- function(x,...)
 #suppose the rows of a matrix are edges   #
 #we check the irreducibility of the matrix#
 ###########################################
+#debugged: must set addrownums = FALSE in order to avoid row name errors, see ?tail in R for detail
 check_irred <- function(mat) {
   if (!is.matrix(mat)) {
     stop ("only a matrix can be checked irreducibility!")
@@ -808,10 +808,12 @@ check_irred <- function(mat) {
   nmat <- mat
   base <- mat
   hd <- head(mat, 1)
-  tl <- tail(mat, -1)
+  tl <- tail(mat, -1, addrownums = FALSE)
   id <- 1
-  m <- n
+  #m <- n
   rm_id <- NULL
+#new:
+  eq_id <- NULL
   eq <- FALSE 
   eq_num <- 0
   while (nrow(tl) >= 1 & nrow(base) >= 1) {
@@ -819,23 +821,24 @@ check_irred <- function(mat) {
      hd0 <- hd
      if (all(round(as.vector(ans$yhat), 8) == round(as.vector(hd), 8))) {
        hd <- head(tl, 1)
-       tl <- tail(tl, -1)
+       tl <- tail(tl, -1, addrownums = FALSE)
        rm_id <- c(rm_id, id)
      } else {
          ans <- coneB(-hd, tl)
          if (all(round(as.vector(ans$yhat), 8) == round(as.vector(-hd), 8))) {
            eq <- TRUE
            eq_num <- eq_num + 1
+#new:
+	   eq_id <- c(eq_id, id)
            hd <- head(tl, 1)
-           tl <- rbind(tail(tl, -1), hd0)
-         }
-         else {
+           tl <- rbind(tail(tl, -1, addrownums = FALSE), hd0)
+         } else {
            hd <- head(tl, 1)
-           tl <- rbind(tail(tl, -1), hd0)   
+           tl <- rbind(tail(tl, -1, addrownums = FALSE), hd0)   
          }
      } 
      id <- id + 1
-     m <- m - 1
+     #m <- m - 1
      base <- base[-1, ,drop = FALSE]
   }
   if (!is.null(rm_id)) {
@@ -844,7 +847,9 @@ check_irred <- function(mat) {
   if (!eq && is.null(rm_id)) {
      print ("edges are irreducible!")
   }
-  rslt <- list(edge = nmat, reducible = rm_id, equal = eq_num)
+#debug: should devide eq_num by 2, count twice
+  #eq_num <- eq_num / 2
+  rslt <- list(edge = nmat, reducible = rm_id, equal = eq_id)
   return (rslt)
 }
  
