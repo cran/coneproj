@@ -1,7 +1,7 @@
 ############
 #polar cone#
 ############
-coneA <- function(y, amat, w = NULL, msg = TRUE){
+coneA <- function(y, amat, w = NULL, face = NULL, msg = TRUE){
   if (!is.numeric(y) | length(y) == 0) {
     stop("y must be a numeric vector of length >= 1 !")
   }
@@ -11,6 +11,24 @@ coneA <- function(y, amat, w = NULL, msg = TRUE){
   if (ncol(amat) != length(y)) {
     stop("the column number of amat must equal the length of y !")
   }     
+#new:
+  if (!is.null(face)) {
+     obs <- 1:nrow(amat)
+     if (!all(face %in% obs)) {
+         warning("Edges of the starting face must be a subset of all edges ! User-defined face is not used !")
+         face <- matrix(numeric(0))
+     } else {
+         if (!is.numeric(face)) {
+             stop("face must be numeric !")
+         }
+         if (is.vector(face)) {
+            face <- as.matrix(face, ncol=1)
+         }
+     }
+  }
+  if (is.null(face)) {
+      face <- matrix(numeric(0))
+  }
   if (!is.null(w)) {
     if (!is.numeric(w)) {
       stop("w must be a numeric vector !")
@@ -24,7 +42,7 @@ coneA <- function(y, amat, w = NULL, msg = TRUE){
       w <- diag(w)
       y <- sqrt(w) %*% y
       amat <- amat %*% solve(sqrt(w))
-      ans <- .Call("coneACpp", y, amat, PACKAGE = "coneproj")
+      ans <- .Call("coneACpp", y, amat, face, PACKAGE = "coneproj")
       if (ans$nrep > (length(y)^2 - 1)) {
         if (msg) {
           print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
@@ -36,7 +54,7 @@ coneA <- function(y, amat, w = NULL, msg = TRUE){
       ans$thetahat <- solve(sqrt(w), ans$thetahat)
     }
   } else { 
-    ans <- .Call("coneACpp", y, amat, PACKAGE = "coneproj")
+    ans <- .Call("coneACpp", y, amat, face, PACKAGE = "coneproj")
     if (ans$nrep > (length(y)^2 - 1)) {
       if (msg) {
         print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
@@ -46,7 +64,8 @@ coneA <- function(y, amat, w = NULL, msg = TRUE){
       print ("Fail to converge in conerpoj!nrep > n^2 !")
     }
   }
-  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat)
+  face <- which(ans$h == 1)
+  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat, face = face)
   attr(rslt, "sub") <- "coneA"
   class(rslt) <- "coneproj"
   return (rslt) 
@@ -55,15 +74,16 @@ coneA <- function(y, amat, w = NULL, msg = TRUE){
 #################
 #constraint cone#
 #################
-coneB <- function(y, delta, vmat = NULL, w = NULL, msg = TRUE){
+coneB <- function(y, delta, vmat = NULL, w = NULL, face = NULL, msg = TRUE){
   if (!is.numeric(y) | length(y) == 0) {
     stop("y must be a numeric vector of length >= 1 !")
   }
   if (!is.numeric(delta) | !is.matrix(delta)) { 
     stop("delta must be a numeric matrix !")      
   }
-  if (ncol(delta) != length(y)) {
-    stop("the column number of delta must equal the length of y !")  
+#new:
+  if (nrow(delta) != length(y)) {
+    stop("the row number of delta must equal the length of y !")
   }
   if (!is.null(vmat)) {
    # if (!is.numeric(vmat) | !is.matrix(vmat)) {
@@ -80,11 +100,31 @@ coneB <- function(y, delta, vmat = NULL, w = NULL, msg = TRUE){
     }
 # if vmat != NULL, we make a copy of vmat 
     nvmat <- vmat
- }
- if (is.null(vmat)) {
+    np <- ncol(vmat)
+  }
+  if (is.null(vmat)) {
 # if vmat == NULL, we make a matrix of a numeric(0) element to replace vmat
-   nvmat <- matrix(numeric(0))
- }
+    nvmat <- matrix(numeric(0))
+    np <- 0
+  }
+#new:
+  if (!is.null(face)) {
+     obs <- 1:(ncol(delta)+np)
+     if (!all(face %in% obs)) {
+         warning("Edges of the starting face must be a subset of all edges ! User-defined face is not used !")
+         face <- matrix(numeric(0))
+     } else {
+         if (!is.numeric(face)) {
+             stop("face must be numeric !")
+         }
+         if (is.vector(face)) {
+            face <- as.matrix(face, ncol=1)
+         }
+     }
+  }
+  if (is.null(face)) {
+      face <- matrix(numeric(0))
+  }
   if (!is.null(w)) {
     if (!is.numeric(w)) {
       stop("w must be a numeric vector !")
@@ -97,27 +137,28 @@ coneB <- function(y, delta, vmat = NULL, w = NULL, msg = TRUE){
     } else {      
         w <- diag(w)
         y <- sqrt(w) %*% y
-	delta <- t(sqrt(w) %*% t(delta))
+        delta <- sqrt(w) %*% delta
         if (!is.null(vmat)) {
-	  nvmat <- sqrt(w) %*% nvmat
+            nvmat <- sqrt(w) %*% nvmat
         }
-	ans <- .Call("coneBCpp", y, delta, nvmat, PACKAGE = "coneproj")
+        ans <- .Call("coneBCpp", y, t(delta), nvmat, face, PACKAGE = "coneproj")
         if (ans$nrep > (length(y)^2 - 1)) {
           if (msg) {
             print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
           }
         }
-	ans$yhat <- solve(sqrt(w), ans$yhat)
+        ans$yhat <- solve(sqrt(w), ans$yhat)
       }
     } else {
-      ans <- .Call("coneBCpp", y, delta, nvmat, PACKAGE = "coneproj")
+      ans <- .Call("coneBCpp", y, t(delta), nvmat, face, PACKAGE = "coneproj")
       if (ans$nrep > (length(y)^2 - 1)) {
         if (msg) {
           print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
         }
       }
     }
-  rslt <- list(df = ans$dim, yhat = ans$yhat, steps = ans$nrep, coefs = ans$coefs)
+  face <- which(ans$coefs > 0L)
+  rslt <- list(df = ans$dim, yhat = ans$yhat, steps = ans$nrep, coefs = ans$coefs, face = face)
   attr(rslt, "sub") <- "coneB"
   class(rslt) <- "coneproj"
   return (rslt) 
@@ -126,7 +167,7 @@ coneB <- function(y, delta, vmat = NULL, w = NULL, msg = TRUE){
 #######################
 #quadratic programming#
 #######################
-qprog <- function(q, c, amat, b, msg = TRUE) {
+qprog <- function(q, c, amat, b, face = NULL, msg = TRUE) {
   if (!is.vector(c)) {
     c <- as.vector(c)
   }
@@ -139,17 +180,36 @@ qprog <- function(q, c, amat, b, msg = TRUE) {
   if (ncol(q) != ncol(amat)) {
     stop("the column number of q should be equal to the column number of amat !")
   }
+#new:
+  if (!is.null(face)) {
+     obs <- 1:nrow(amat)
+     if (!all(face %in% obs)) {
+         warning("Edges of the starting face must be a subset of all edges ! User-defined face is not used !")
+         face <- matrix(numeric(0))
+     } else {
+         if (!is.numeric(face)) {
+             stop("face must be numeric !")
+         }
+         if (is.vector(face)) {
+            face <- as.matrix(face, ncol=1)
+         }
+     }
+  }
+  if (is.null(face)) {
+      face <- matrix(numeric(0))
+  }
   if (nrow(amat) != length(b)) {
     stop("the row number of amat should be equal to the length of b !")
   } else {
-    ans <- .Call("qprogCpp", q, c, amat, b, PACKAGE = "coneproj")
+    ans <- .Call("qprogCpp", q, c, amat, b, face, PACKAGE = "coneproj")
     if (ans$nrep > (length(c)^2 - 1)) {
        if (msg) {
           print (paste("Fail to converge in coneproj!Too many steps! Number of steps:", ans$nrep))
         }
     }
   }
-  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat)
+  face <- which(ans$h == 1)
+  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat, face = face)
   attr(rslt, "sub") <- "qprog"
   class(rslt) <- "coneproj"
   return (rslt) 
@@ -388,7 +448,7 @@ shapereg <- function(formula, data = NULL, weights = NULL, test = FALSE, nloop =
 #core routine of shapereg#
 ##########################
 shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop = 1e+4) {
-  #find delta for the constraint cone 
+#find delta for the constraint cone 
     delta <- makedelta(t, shape)
     if (is.null(xmat)) {
       nxmat <- NULL
@@ -433,7 +493,7 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
     }
   }
   n <- length(y)
-  ans <- coneB(y, delta, vmat, w)
+  ans <- coneB(y, t(delta), vmat, w)
   nd <- length(delta) / n
   pv <- length(vmat) / n
   #find coefs for vmat and delta
@@ -524,7 +584,7 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
         ys <- ys + vmat[,i]
       }
       ys <- ys + rnorm(n)
-      ans <- coneB(ys, delta, vmat, w)
+      ans <- coneB(ys, t(delta), vmat, w)
       l <- ans$df + 1
       mdist[l] <- mdist[l] + 1
     }
@@ -795,7 +855,7 @@ print.summary.coneproj <- function(x,...)
 }
 
 ###########################################
-#suppose the rows of a matrix are edges   #
+#suppose the columns of a matrix are edges#
 #we check the irreducibility of the matrix#
 ###########################################
 #debugged: must set addrownums = FALSE in order to avoid row name errors, see ?tail in R for detail
@@ -803,6 +863,8 @@ check_irred <- function(mat) {
   if (!is.matrix(mat)) {
     stop ("only a matrix can be checked irreducibility!")
   }
+#new:
+  mat <- t(mat)
   n <- nrow(mat)
   sm <- 1e-8
   nmat <- mat
@@ -817,19 +879,19 @@ check_irred <- function(mat) {
   eq <- FALSE 
   eq_num <- 0
   while (nrow(tl) >= 1 & nrow(base) >= 1) {
-     ans <- coneB(hd, tl)
+     ans <- coneB(hd, t(tl))
      hd0 <- hd
      if (all(round(as.vector(ans$yhat), 8) == round(as.vector(hd), 8))) {
        hd <- head(tl, 1)
        tl <- tail(tl, -1, addrownums = FALSE)
        rm_id <- c(rm_id, id)
      } else {
-         ans <- coneB(-hd, tl)
+         ans <- coneB(-hd, t(tl))
          if (all(round(as.vector(ans$yhat), 8) == round(as.vector(-hd), 8))) {
            eq <- TRUE
            eq_num <- eq_num + 1
 #new:
-	   eq_id <- c(eq_id, id)
+	   	   eq_id <- c(eq_id, id)
            hd <- head(tl, 1)
            tl <- rbind(tail(tl, -1, addrownums = FALSE), hd0)
          } else {

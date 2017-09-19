@@ -6,14 +6,15 @@ This routine implements the hinge algorithm for cone projection to minimize \eqn
 \eqn{C} of the form \eqn{\{\theta: \theta = v + \sum b_i\delta_i,   i = 1,\ldots,m,  b_1,\ldots, b_m \ge 0\}}, \eqn{v} is in \eqn{V}.}
 
 \usage{
-coneB(y, delta, vmat = NULL, w = NULL, msg = TRUE)
+coneB(y, delta, vmat = NULL, w = NULL, face = NULL, msg = TRUE)
 }
 
 \arguments{
   \item{y}{A vector of length \eqn{n}.}
-  \item{delta}{A matrix whose rows are the constraint cone edges. The rows of delta must be irreducible. Its column number must equal the length of \eqn{y}. No row of delta is contained in the column space of vmat.}
+  \item{delta}{A matrix whose columns are the constraint cone edges. The columns of delta must be irreducible. Its row number must equal the length of \eqn{y}. No column of delta is contained in the column space of vmat.}
   \item{vmat}{A matrix whose columns are the basis of the linear space contained in the constraint cone. Its row number must equal the length of \eqn{y}. The columns of vmat must be linearly independent. The default is vmat = NULL}
   \item{w}{An optional nonnegative vector of weights of length \eqn{n}. If w is not given, all weights are taken to equal 1. Otherwise, the minimization of \eqn{(y - \theta)'w(y - \theta)} over \eqn{C} is returned. The default is w = NULL.}
+  \item{face}{A vector of the positions of edges, which define the initial face for the cone projection. For example, when there are \eqn{m} cone edges, then face is a subset of \eqn{1,\ldots,m}. The default is face = NULL.}
   \item{msg}{A logical flag. If msg is TRUE, then a warning message will be printed when there is a non-convergence problem; otherwise no warning message will be printed. The default is msg = TRUE}
 }
 
@@ -24,6 +25,7 @@ coneB(y, delta, vmat = NULL, w = NULL, msg = TRUE)
 \item{yhat}{The projection of \eqn{y} on the constraint cone.}
 \item{steps}{The number of iterations before the algorithm converges.}
 \item{coefs}{The coefficients of the basis of the linear space and the constraint cone edges contained in the constraint cone.}
+\item{face}{A vector of the positions of edges, which define the face on which the final projection lands on. For example, when there are \eqn{m} cone edges, then face is a subset of \eqn{1,\ldots,m}.}
 }
 
 \references{
@@ -62,7 +64,7 @@ Mary C. Meyer and Xiyue Liao
     }
 
 # note that in coneB, the transpose of the edges of the constraint cone is provided
-    delta <- t(crossprod(amat, solve(tcrossprod(amat))))
+    delta <- crossprod(amat, solve(tcrossprod(amat)))
     
 # make the basis of V
     vmat <- matrix(rep(1, n), ncol = 1)

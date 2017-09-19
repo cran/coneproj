@@ -3,12 +3,13 @@
 \title{Quadratic Programming}
 \description{
 Given a positive definite \eqn{n} by \eqn{n} matrix \eqn{Q} and a constant vector \eqn{c} in \eqn{R^n}, the object is to find \eqn{\theta} in \eqn{R^n} to minimize \eqn{\theta'Q\theta - 2c'\theta} subject to \eqn{A\theta \ge b}, for an irreducible constraint matrix \eqn{A}. This routine transforms into a cone projection problem for the constrained solution. }
-\usage{qprog(q, c, amat, b, msg = TRUE)}
+\usage{qprog(q, c, amat, b, face = NULL, msg = TRUE)}
 \arguments{
   \item{q}{A \eqn{n} by \eqn{n} positive definite matrix.}
   \item{c}{A vector of length \eqn{n}.}
   \item{amat}{A \eqn{m} by \eqn{n} constraint matrix. The rows of amat must be irreducible.}
   \item{b}{A vector of length \eqn{m}. Its default value is 0.}
+    \item{face}{A vector of the positions of edges, which define the initial face for the cone projection. For example, when there are \eqn{m} cone edges, then face is a subset of \eqn{1,\ldots,m}. The default is face = NULL.}
   \item{msg}{A logical flag. If msg is TRUE, then a warning message will be printed when there is a non-convergence problem; otherwise no warning message will be printed. The default is msg = TRUE}
 }
 \details{
@@ -23,6 +24,7 @@ The routine qprog dynamically loads a C++ subroutine "qprogCpp".
 \item{thetahat}{A vector minimizing \eqn{\theta'Q\theta - 2c'\theta}.}
 \item{steps}{The number of iterations before the algorithm converges.}
 \item{xmat}{The rows of the matrix are the edges of the face of the polar cone on which the residual of the projection onto the constraint cone lands.}
+\item{face}{A vector of the positions of edges, which define the face on which the final projection lands on. For example, when there are \eqn{m} cone edges, then face is a subset of \eqn{1,\ldots,m}.}
 }
 \references{
 Goldfarb, D. and A. Idnani (1983) A numerically stable dual method for solving strictly convex quadratic programs.

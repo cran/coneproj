@@ -20,12 +20,12 @@ using namespace Rcpp;
 
 // declarations
 extern "C" {
-SEXP coneACpp( SEXP y, SEXP amat) ;
+SEXP coneACpp( SEXP y, SEXP amat, SEXP face) ;
 }
 
 // definition
 
-SEXP coneACpp( SEXP y, SEXP amat ){
+SEXP coneACpp( SEXP y, SEXP amat, SEXP face){
 BEGIN_RCPP
 
     Rcpp::NumericVector y_(y);
@@ -38,6 +38,9 @@ BEGIN_RCPP
     arma::colvec obs = arma::linspace(0, m-1, m);
     int check = 0;
     arma::mat amat_in = namat;
+//new:
+    arma::colvec face_ = Rcpp::as<arma::colvec>(face);
+    int nf = face_.n_rows;    
 
     for(int im = 0; im < m; im ++){
         arma::mat nnamat = namat.row(im) * namat.row(im).t();
@@ -51,8 +54,14 @@ BEGIN_RCPP
     if(max(b2) > 2 * sm){
         int i = min(obs.elem(find(b2 == max(b2))));
         h(i) = 1;
+//new:
+        if(!face_.is_empty()) {
+            for (int i = 0; i < nf; i ++) {
+                int posi = face_(i) - 1;
+                h(posi) = 1;
+            }
+        }
     }
-
     else{check = 1;}
 
     int nrep = 0;
@@ -95,7 +104,7 @@ BEGIN_RCPP
 
     //if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
 
-    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep));
+    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
 
 END_RCPP
 }
@@ -103,12 +112,12 @@ END_RCPP
 
 // declarations
 extern "C" {
-SEXP coneBCpp( SEXP y, SEXP delta, SEXP vmat) ;
+SEXP coneBCpp( SEXP y, SEXP delta, SEXP vmat, SEXP face) ;
 }
 
 // definition
 
-SEXP coneBCpp( SEXP y, SEXP delta, SEXP vmat ){
+SEXP coneBCpp( SEXP y, SEXP delta, SEXP vmat, SEXP face){
 BEGIN_RCPP
 
     Rcpp::NumericVector y_(y);
@@ -120,6 +129,9 @@ BEGIN_RCPP
     arma::mat a;
     arma::mat sigma;
     arma::colvec h;
+//new:
+    arma::colvec face_ = Rcpp::as<arma::colvec>(face);
+    int nf = face_.n_rows;
     arma::colvec obs;
     arma::mat theta(n, 1);
 
@@ -149,7 +161,7 @@ BEGIN_RCPP
     }
 
     if(!nvmat.is_empty()){ 
-	sigma.set_size(m + p, n);
+        sigma.set_size(m + p, n);
         sigma.rows(0, p - 1) = nvmat.t(); sigma.rows(p, m + p - 1) = delta_in;
         h.set_size(m + p); 
         h.fill(0);
@@ -166,8 +178,15 @@ BEGIN_RCPP
     if(max(b2) > 2 * sm){
         int i = min(obs.elem(find(b2 == max(b2))));
         h(i) = 1;
+//new:
+        if(!face_.is_empty()) {
+            for (int i = 0; i < nf; i ++) {
+                int posi = face_(i) - 1;
+                h(posi) = 1;
+            }
+        }
     }
-
+    
     int nrep = 0;  
 
     if(max(b2) <= 2 * sm){
@@ -181,13 +200,13 @@ BEGIN_RCPP
         if(!nvmat.is_empty()){
            a.set_size(p, 1); 
            a = solve(nvmat.t() * nvmat, nvmat.t() * ny);
-	   theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny);
+           theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny);
         }
         arma::colvec avec(m + p); avec.fill(0);
-	if(!nvmat.is_empty()){
+        if(!nvmat.is_empty()){
           avec.elem(find(h == 1)) = a;
-	}        
-	return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec, Named("nrep") = nrep, Named("dim") = sum(h)));
+        }
+        return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec, Named("nrep") = nrep, Named("dim") = sum(h)));
     }
 //new: 
     //int upper = n*n - 1;
@@ -209,7 +228,7 @@ BEGIN_RCPP
  	//double sc = arma::norm(xmat * xmat.t(), 2);
         a = solve(xmat * xmat.t(), xmat * ny);
 //new: 
-	if (a.n_elem > p) {
+       if (a.n_elem > p) {
             arma::colvec a_sub(a.n_elem - p);
 
             for(int i = p; i <= a.n_elem - 1; i ++){
@@ -239,13 +258,13 @@ BEGIN_RCPP
 //sc = arma::as_scalar(b2.t() * b2);
                 //if(max(b2) > 2 * sc * sm){
 		//if((max(b2) * sc) > 2 * sm){
-		if(max(b2) > 2 * sm){
+                if(max(b2) > 2 * sm){
                     int i = min(obs.elem(find(b2 == max(b2))));
                     check = 0;
                     h(i) = 1;
                 }
             }
-       } else {
+        } else {
             check = 1;
        }
 //new: avoid the mismatch problem
@@ -258,7 +277,7 @@ BEGIN_RCPP
             }
             //sc = norm(xmat * xmat.t(), 2);
             a = solve(xmat * xmat.t(), xmat * ny);
-	    theta = xmat.t() * a;
+            theta = xmat.t() * a;
        }
    }
 
@@ -273,9 +292,7 @@ BEGIN_RCPP
    for(int i = p; i < (m + p); i ++){
       avec_orig(i) = avec(i) / scalar(i - p);
    }
-
    // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
-
    return wrap(Rcpp::List::create(Named("yhat") = theta, Named("coefs") = avec_orig, Named("nrep") = nrep, Named("dim") = sum(h)));
 
 END_RCPP
@@ -284,12 +301,12 @@ END_RCPP
 
 // declarations
 extern "C" {
-SEXP qprogCpp( SEXP q, SEXP c, SEXP amat, SEXP b) ;
+SEXP qprogCpp( SEXP q, SEXP c, SEXP amat, SEXP b, SEXP face) ;
 }
 
 // definition
 
-SEXP qprogCpp( SEXP q, SEXP c, SEXP amat, SEXP b ){
+SEXP qprogCpp( SEXP q, SEXP c, SEXP amat, SEXP b, SEXP face){
 BEGIN_RCPP
 
     Rcpp::NumericVector c_(c);
@@ -303,7 +320,10 @@ BEGIN_RCPP
     bool constr = is_true(any( nb != 0 ));
     arma::colvec theta0(n);
     arma::colvec nnc(n);
-
+//new:
+    arma::colvec face_ = Rcpp::as<arma::colvec>(face);
+    int nf = face_.n_rows;
+    
     if(constr){
         arma::colvec b_(nb.begin(), m, false);
         theta0 = solve(namat, b_);
@@ -334,6 +354,13 @@ BEGIN_RCPP
     if(max(b2) > 2 * sm){
         int i = min(obs.elem(find(b2 == max(b2))));
         h(i) = 1;
+//new:
+        if(!face_.is_empty()) {
+            for (int i = 0; i < nf; i ++) {
+                int posi = face_(i) - 1;
+                h(posi) = 1;
+            }
+        }
     }
 
     else{check = 1;}
@@ -386,7 +413,7 @@ BEGIN_RCPP
 
     // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in qprog!Too many steps! Number of steps:" << nrep << std::endl;}
 
-    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = thetahat, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep));
+    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = thetahat, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
 
 END_RCPP
 }

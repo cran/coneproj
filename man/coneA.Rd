@@ -4,11 +4,12 @@
 \description{
 This routine implements the hinge algorithm for cone projection to minimize 
 \eqn{||y - \theta||^2} over the cone \eqn{C} of the form \eqn{\{\theta: A\theta \ge 0\}}. }
-\usage{coneA(y, amat, w = NULL, msg = TRUE)  }
+\usage{coneA(y, amat, w = NULL, face = NULL, msg = TRUE)  }
 \arguments{
   \item{y}{A vector of length \eqn{n}.}
   \item{amat}{A constraint matrix. The rows of amat must be irreducible. The column number of amat must equal the length of \eqn{y}.}
   \item{w}{An optional nonnegative vector of weights of length \eqn{n}. If w is not given, all weights are taken to equal 1. Otherwise, the minimization of \eqn{(y - \theta)'w(y - \theta)} over \eqn{C} is returned. The default is w = NULL.}
+   \item{face}{A vector of the positions of edges, which define the initial face for the cone projection. For example, when there are \eqn{m} cone edges, then face is a subset of \eqn{1,\ldots,m}. The default is face = NULL.}
   \item{msg}{A logical flag. If msg is TRUE, then a warning message will be printed when there is a non-convergence problem; otherwise no warning message will be printed. The default is msg = TRUE}
 }
 
@@ -21,6 +22,7 @@ of \eqn{- A} are the edges of the polar cone \eqn{\Omega^o}. This routine first 
 \item{thetahat}{The projection of  \eqn{y} on the constraint cone.}
 \item{steps}{The number of iterations before the algorithm converges.}
 \item{xmat}{The rows of the matrix are the edges of the face of the polar cone on which the residual of the projection onto the constraint cone lands.}
+\item{face}{A vector of the positions of edges, which define the face on which the final projection lands on. For example, when there are \eqn{m} cone edges, then face is a subset of \eqn{1,\ldots,m}.}
 }
 
 \references{

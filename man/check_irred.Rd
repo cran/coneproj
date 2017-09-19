@@ -5,13 +5,13 @@ Routine for Checking Irreducibility
 }
 
 \description{
-This routine checks the irreducibility of a set of edges, which are supposed to form the rows of a matrix. If a row is a positive linear combination of other rows, then it can be removed without affecting the problem; if there is a positive linear combination of rows of the matrix that equals the zero vector, then there is an implicit equality constraint in the matrix. In the former case, this routine delete the redundant rows and return a set of irreducible edges, while in the latter case, this routine will give the number of equality constraints in the matrix, and will leave this issue to the user to fix.
+This routine checks the irreducibility of a set of edges, which are supposed to form the columns of a matrix. If a column is a positive linear combination of other columns, then it can be removed without affecting the problem; if there is a positive linear combination of columns of the matrix that equals the zero vector, then there is an implicit equality constraint in the matrix. In the former case, this routine delete the redundant columns and return a set of irreducible edges, while in the latter case, this routine will give the number of equality constraints in the matrix, and will leave this issue to the user to fix.
 }
 
 \usage{check_irred(mat)}
 
 \arguments{
-  \item{mat}{A matrix whose rows are edges.}
+  \item{mat}{A matrix whose columns are edges.}
 }
 
 \value{
@@ -40,7 +40,7 @@ Mary C. Meyer and Xiyue Liao
 \dontrun{
   data(TwoDamat)
   dim(TwoDamat)
-  ans <- check_irred(TwoDamat)
+  ans <- check_irred(t(TwoDamat))
   }
 }
 
