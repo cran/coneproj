@@ -7,3 +7,6 @@
 * change 'equal' to be in check_irred
 * set addrownums = FALSE in order to avoid row name errors in check_irred
 * scale b2 by length in while loop of coneB
+
+1.13
+* change & to be && change | to be || with () to pass Gcc test

@@ -2,10 +2,10 @@
 #polar cone#
 ############
 coneA <- function(y, amat, w = NULL, face = NULL, msg = TRUE){
-  if (!is.numeric(y) | length(y) == 0) {
+  if ((!is.numeric(y) || length(y) == 0)) {
     stop("y must be a numeric vector of length >= 1 !")
   }
-  if (!is.numeric(amat) | !is.matrix(amat)) {
+  if ((!is.numeric(amat) || !is.matrix(amat))) {
     stop("amat must be a numeric matrix !")
   }
   if (ncol(amat) != length(y)) {
@@ -75,10 +75,10 @@ coneA <- function(y, amat, w = NULL, face = NULL, msg = TRUE){
 #constraint cone#
 #################
 coneB <- function(y, delta, vmat = NULL, w = NULL, face = NULL, msg = TRUE){
-  if (!is.numeric(y) | length(y) == 0) {
+  if ((!is.numeric(y) || length(y) == 0)) {
     stop("y must be a numeric vector of length >= 1 !")
   }
-  if (!is.numeric(delta) | !is.matrix(delta)) { 
+  if ((!is.numeric(delta) || !is.matrix(delta))) {
     stop("delta must be a numeric matrix !")      
   }
 #new:
@@ -225,7 +225,7 @@ qrdecomp <- function(xm) {
   lv <- 0
   qm <- xm
   i <- 0
-  while (lv == 0 & i <= m) {
+  while ((lv == 0 && i <= m)) {
     i <- i + 1
     lv <- sum(xm[, i]^2)
   }
@@ -322,8 +322,8 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
         ys <- rnorm(n)
 #new: include weighted case: already checked w
         if (!is.null(w)) {
-	  z <- t(uinv) %*% t(xmat) %*% w %*% ys
-	} else {
+            z <- t(uinv) %*% t(xmat) %*% w %*% ys
+        } else {
           z <- t(uinv) %*% t(xmat) %*% ys
         }
         ans <- coneA(z, atil)
@@ -432,7 +432,7 @@ shapereg <- function(formula, data = NULL, weights = NULL, test = FALSE, nloop =
       }
     }  
   }
-  if (!test & nloop > 0) {
+  if ((!test && nloop > 0)) {
 	nloop <- 0
   	#print ("nloop > 0, test should be TRUE!")
   }
@@ -452,7 +452,7 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
     delta <- makedelta(t, shape)
     if (is.null(xmat)) {
       nxmat <- NULL
-      if (shape == 3 | shape == 4) {
+      if ((shape == 3 || shape == 4)) {
         vmat <- cbind(rep(1, length(y)), t)
       } else {vmat <- matrix(rep(1, length(y)), ncol = 1)}
     }
@@ -463,7 +463,7 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
         #if (all.equal(round(diff(nxmat), 8), matrix(rep(0, nrow(nxmat)-1), ncol = 1))) {
            nxmat <- NULL
         } 
-        if (shape == 3 | shape == 4) {
+        if ((shape == 3 || shape == 4)) {
           vmat <- cbind(rep(1, length(y)), nxmat, t)
         } else {vmat <- cbind(rep(1, length(y)), nxmat)}
       }
@@ -484,7 +484,7 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
         if (!is.null(mat_rm)) {
           nxmat <- nxmat[,-mat_rm,drop=FALSE]
         }
-        if (shape == 3 | shape == 4) {
+        if ((shape == 3 || shape == 4)) {
           vmat <- cbind(rep(1, length(y)), nxmat, t)
         } else {vmat <- cbind(rep(1, length(y)), nxmat)}
     }
@@ -498,7 +498,7 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
   pv <- length(vmat) / n
   #find coefs for vmat and delta
   coefx <- ans$coefs[1:pv]
-  if (shape == 3 | shape == 4) {
+  if ((shape == 3 || shape == 4)) {
     coefb <- coefx[-pv]
   } else {coefb <- coefx}
   bvec <- ans$coefs[(pv + 1):(pv + nd)]
@@ -615,7 +615,7 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
 ###################
 fitted.coneproj <- function(object,...) {
   sub <- attributes(object)$sub
-  if (sub == "coneA" | sub == "qprog") {
+  if ((sub == "coneA" || sub == "qprog")) {
     ans <- object$thetahat
   } else if (sub == "coneB") {
     ans <- object$yhat
@@ -673,7 +673,7 @@ makedelta <- function(x, sh) {
     if (sh == 2) {
       amat <- -amat
     }
-  } else if (sh == 3 | sh == 4) {
+  } else if ((sh == 3 || sh == 4)) {
     amat <- matrix(0, nrow = n1 - 2, ncol = n)
     for (i in 1:(n1-2)) {
       c1 <- min(obs[x == xu[i]]); c2 <- min(obs[x == xu[i + 1]]); c3 <- min(obs[x == xu[i + 2]])
@@ -718,7 +718,7 @@ makedelta <- function(x, sh) {
       delta <- t(t(amat) %*% solve(amat %*% t(amat)))
   } 
   dr <- length(delta) / n
-  if (sh > 2 & sh < 5) {
+  if ((sh > 2 && sh < 5)) {
     pr1 <- cbind(1:n * 0 + 1, x)
     prmat <- pr1 %*% solve(crossprod(pr1), t(pr1))
     for (i in 1:dr) {
@@ -783,7 +783,7 @@ summary.coneproj <- function(object,...) {
 			}
 			rslt1 <- as.matrix(rslt1)
 		} 
-		if (!is.null(sse0) & !is.null(sse1)) {
+		if ((!is.null(sse0) && !is.null(sse1))) {
 			#rslt2 <- cbind(SSE.Linear = sse0, SSE.Full = sse1)
 #new:
 			rslt2 <- data.frame("SSE.Linear" = sse0, "SSE.Full" = sse1)
@@ -878,7 +878,7 @@ check_irred <- function(mat) {
   eq_id <- NULL
   eq <- FALSE 
   eq_num <- 0
-  while (nrow(tl) >= 1 & nrow(base) >= 1) {
+  while ((nrow(tl) >= 1 && nrow(base) >= 1)) {
      ans <- coneB(hd, t(tl))
      hd0 <- hd
      if (all(round(as.vector(ans$yhat), 8) == round(as.vector(hd), 8))) {
@@ -906,7 +906,7 @@ check_irred <- function(mat) {
   if (!is.null(rm_id)) {
     nmat <- nmat[-rm_id, ,drop = FALSE]
   }
-  if (!eq && is.null(rm_id)) {
+  if ((!eq && is.null(rm_id))) {
      print ("edges are irreducible!")
   }
 #debug: should devide eq_num by 2, count twice
