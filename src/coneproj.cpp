@@ -67,7 +67,7 @@ BEGIN_RCPP
     int nrep = 0;
 //new:
     arma::mat xmat_use;
-    while((check == 0 && nrep < (n * n))){
+    while((check==0) & (nrep<(n*n))){
         nrep ++ ;
         arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
         indice = indice.elem(find(h == 1));
@@ -213,7 +213,7 @@ BEGIN_RCPP
     //int upper = 1000;
    // while(check == 0 & nrep < (n * n)){
 //double sc = 0;
-   while((check == 0 && nrep < 1e+6)){
+   while((check==0) & (nrep<1e+6)){
         nrep ++;
         //if(nrep > (n * n)){
           // throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));
@@ -368,7 +368,7 @@ BEGIN_RCPP
     int nrep = 0;
 //new:
     arma::mat xmat_use;
-    while((check == 0 && nrep < (n * n))){
+    while((check==0) & (nrep<(n*n))){
         nrep ++ ;
        // if(nrep > (n * n)){
          //  throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));}
