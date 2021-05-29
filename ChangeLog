@@ -10,3 +10,6 @@
 
 1.13
 * change & to be && change | to be || with () to pass Gcc test
+
+1.15
+* tail(., addrownums = FALSE) is deprecated. Use tail(., keepnums = FALSE) instead.

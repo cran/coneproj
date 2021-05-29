@@ -314,8 +314,6 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
   dim0 <- m - g$rank
   #find the p-value for E01 test
   if (test) {
-    nloop <- nloop
-    #set.seed(123)
     if (bval > sm) {
       mdist <- 0:m*0
       for (iloop in 1:nloop) {
@@ -870,7 +868,8 @@ check_irred <- function(mat) {
   nmat <- mat
   base <- mat
   hd <- head(mat, 1)
-  tl <- tail(mat, -1, addrownums = FALSE)
+  #tl <- tail(mat, -1, addrownums = FALSE)
+  tl <- tail(mat, -1, keepnums = FALSE)
   id <- 1
   #m <- n
   rm_id <- NULL
@@ -883,7 +882,8 @@ check_irred <- function(mat) {
      hd0 <- hd
      if (all(round(as.vector(ans$yhat), 8) == round(as.vector(hd), 8))) {
        hd <- head(tl, 1)
-       tl <- tail(tl, -1, addrownums = FALSE)
+       #tl <- tail(tl, -1, addrownums = FALSE)
+       tl <- tail(tl, -1, keepnums = FALSE)
        rm_id <- c(rm_id, id)
      } else {
          ans <- coneB(-hd, t(tl))
@@ -891,12 +891,14 @@ check_irred <- function(mat) {
            eq <- TRUE
            eq_num <- eq_num + 1
 #new:
-	   	   eq_id <- c(eq_id, id)
+	   	     eq_id <- c(eq_id, id)
            hd <- head(tl, 1)
-           tl <- rbind(tail(tl, -1, addrownums = FALSE), hd0)
+           #tl <- rbind(tail(tl, -1, addrownums = FALSE), hd0)
+           tl <- rbind(tail(tl, -1, keepnums = FALSE), hd0)
          } else {
            hd <- head(tl, 1)
-           tl <- rbind(tail(tl, -1, addrownums = FALSE), hd0)   
+           #tl <- rbind(tail(tl, -1, addrownums = FALSE), hd0)   
+           tl <- rbind(tail(tl, -1, keepnums = FALSE), hd0)
          }
      } 
      id <- id + 1
