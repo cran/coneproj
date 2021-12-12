@@ -13,3 +13,6 @@
 
 1.15
 * tail(., addrownums = FALSE) is deprecated. Use tail(., keepnums = FALSE) instead.
+
+1.16
+* update the eight shape constraint subroutines such that they are the same as those used in cgam

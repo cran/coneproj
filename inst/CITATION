@@ -9,13 +9,11 @@ citEntry(entry = "Article",
   volume       = "61",
   number       = "12",
   pages        = "1--22",
-  url          = "https://www.jstatsoft.org/article/view/v061i12/",
 
   textVersion  =
   paste("Xiyue Liao, Mary C. Meyer (2014).",
         "coneproj: An R Package for the Primal or Dual Cone Projections with Routines for Constrained Regression.",
-        "Journal of Statistical Software, 61(12), 1-22.",
-        "URL https://www.jstatsoft.org/article/view/v061i12/.")
+        "Journal of Statistical Software, 61(12), 1-22.")
 )
 
 

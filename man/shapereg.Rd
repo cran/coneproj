@@ -58,7 +58,7 @@ i = 1,\ldots,m, b_1,\ldots, b_m \ge 0 \}}, \eqn{v} is in \eqn{V}.}
 
 \item{shape}{A number showing the shape constraint given by the user in a shapereg fit.}
 
-\item{tms}{The terms objects extracted by the generic function \emph{terms} from a shapereg fit. See the official help page (\url{http://stat.ethz.ch/R-manual/R-patched/library/stats/html/terms.html}) of the \emph{terms} function for more details.}
+\item{tms}{The terms objects extracted by the generic function \emph{terms} from a shapereg fit.}
 
  \item{zid}{A vector keeping track of the position of the parametrically modelled covariate.}
   \item{vals}{A vector storing the levels of each variable used as a factor.}

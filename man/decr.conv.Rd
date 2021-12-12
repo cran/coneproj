@@ -6,13 +6,16 @@
 
 \description{A symbolic routine to define that the mean vector is decreasing and convex in a predictor in a formula argument to coneproj.}
 
-\usage{decr.conv(x)}
+\usage{decr.conv(x, numknots = 0, knots = 0, space = "E")}
 
 \arguments{
   \item{x}{A numeric predictor which has the same length as the response vector.}
+   \item{numknots}{The number of knots used to smoothly constrain a predictor. The value should be \eqn{0} for a shape-restricted predictor without smoothing. The default value is \eqn{0}.}
+  \item{knots}{The knots used to smoothly constrain a predictor. The value should be \eqn{0} for a shape-restricted predictor without smoothing. The default value is \eqn{0}.}
+ \item{space}{A character specifying the method to create knots. It will not be used for a shape-restricted predictor without smoothing. The default value is "E".}
 }
 
-\value{The vector x with two attributes, i.e., name: the name of x and shape: 6 ("decreasing and convex").}
+\value{The vector x with the shape attribute, i.e., shape: 6 ("decreasing and convex").}
 
 \details{
   "decr.conv" returns the vector "x" and imposes on it two attributes: name and shape. 

@@ -920,78 +920,117 @@ check_irred <- function(mat) {
 #######################
 #eight shape functions#
 ####################### 
-incr <- function(x) 
+incr <- function(x, numknots = 0, knots = 0, space = "E") 
 {
-    cl <- match.call()
-    pars <- match.call()[-1]
-    attr(x, "nm") <- deparse(pars$x)
-    attr(x, "shape") <- 1
-    x
+  cl <- match.call()
+  pars <- match.call()[-1]
+  attr(x, "nm") <- deparse(pars$x)
+  attr(x, "shape") <- 1
+  attr(x, "numknots") <- numknots
+  attr(x, "knots") <- knots
+  attr(x, "space") <- space
+  attr(x, "categ") <- "additive"
+  #class(x) <- "additive"
+  x
 }
 
-decr <- function(x) 
+decr <- function(x, numknots = 0, knots = 0, space = "E") 
 {
-    cl <- match.call()
-    pars <- match.call()[-1]
-    attr(x, "nm") <- deparse(pars$x)
-    attr(x, "shape") <- 2
-    x 
+  cl <- match.call()
+  pars <- match.call()[-1]
+  attr(x, "nm") <- deparse(pars$x)
+  attr(x, "shape") <- 2
+  attr(x, "numknots") <- numknots
+  attr(x, "knots") <- knots
+  attr(x, "space") <- space
+  attr(x, "categ") <- "additive"
+  #class(x) <- "additive"
+  x 
 } 
 
-conv <- function(x) 
+conv <- function(x, numknots = 0, knots = 0, space = "E") 
 {
-    cl <- match.call()
-    pars <- match.call()[-1]
-    attr(x, "nm") <- deparse(pars$x)
-    attr(x, "shape") <- 3
-    x
+  cl <- match.call()
+  pars <- match.call()[-1]
+  attr(x, "nm") <- deparse(pars$x)
+  attr(x, "shape") <- 3
+  attr(x, "numknots") <- numknots
+  attr(x, "knots") <- knots
+  attr(x, "space") <- space
+  attr(x, "categ") <- "additive"
+  #class(x) <- "additive"
+  x
 }
 
-conc <- function(x) 
+conc <- function(x, numknots = 0, knots = 0, space = "E") 
 {
-    cl <- match.call()
-    pars <- match.call()[-1]
-    attr(x, "nm") <- deparse(pars$x)
-    attr(x, "shape") <- 4
-    x
+  cl <- match.call()
+  pars <- match.call()[-1]
+  attr(x, "nm") <- deparse(pars$x)
+  attr(x, "shape") <- 4
+  attr(x, "numknots") <- numknots
+  attr(x, "knots") <- knots
+  attr(x, "space") <- space
+  attr(x, "categ") <- "additive"
+  #class(x) <- "additive"
+  x
 }
 
-incr.conv <- function(x) 
+incr.conv <- function(x, numknots = 0, knots = 0, space = "E") 
 {
-    cl <- match.call()
-    pars <- match.call()[-1]
-    attr(x, "nm") <- deparse(pars$x)
-    attr(x, "shape") <- 5
-    x
+  cl <- match.call()
+  pars <- match.call()[-1]
+  attr(x, "nm") <- deparse(pars$x)
+  attr(x, "shape") <- 5
+  attr(x, "numknots") <- numknots
+  attr(x, "knots") <- knots
+  attr(x, "space") <- space
+  attr(x, "categ") <- "additive"
+  #class(x) <- "additive"
+  x
 }
 
-decr.conv <- function(x) 
+decr.conv <- function(x, numknots = 0, knots = 0, space = "E") 
 {
-    cl <- match.call()
-    pars <- match.call()[-1]
-    attr(x, "nm") <- deparse(pars$x)
-    attr(x, "shape") <- 6
-    x
+  cl <- match.call()
+  pars <- match.call()[-1]
+  attr(x, "nm") <- deparse(pars$x)
+  attr(x, "shape") <- 6
+  attr(x, "numknots") <- numknots
+  attr(x, "knots") <- knots
+  attr(x, "space") <- space
+  attr(x, "categ") <- "additive"
+  #class(x) <- "additive"
+  x
 }
 
-incr.conc <- function(x) 
+incr.conc <- function(x, numknots = 0, knots = 0, space = "E") 
 {
-    cl <- match.call()
-    pars <- match.call()[-1]
-    attr(x, "nm") <- deparse(pars$x)
-    attr(x, "shape") <- 7
-    x
+  cl <- match.call()
+  pars <- match.call()[-1]
+  attr(x, "nm") <- deparse(pars$x)
+  attr(x, "shape") <- 7
+  attr(x, "numknots") <- numknots
+  attr(x, "knots") <- knots
+  attr(x, "space") <- space
+  attr(x, "categ") <- "additive"
+  #class(x) <- "additive"
+  x
 }
 
-decr.conc <- function(x) 
+decr.conc <- function(x, numknots = 0, knots = 0, space = "E") 
 {
-    cl <- match.call()
-    pars <- match.call()[-1]
-    attr(x, "nm") <- deparse(pars$x)
-    attr(x, "shape") <- 8
-    x
+  cl <- match.call()
+  pars <- match.call()[-1]
+  attr(x, "nm") <- deparse(pars$x)
+  attr(x, "shape") <- 8
+  attr(x, "numknots") <- numknots
+  attr(x, "knots") <- knots
+  attr(x, "space") <- space
+  attr(x, "categ") <- "additive"
+  #class(x) <- "additive"
+  x
 }
-
 
 
 
