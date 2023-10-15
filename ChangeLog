@@ -16,3 +16,6 @@
 
 1.16
 * update the eight shape constraint subroutines such that they are the same as those used in cgam
+
+1.17
+* add mixture variance-covariance matrix in constreg, c.i. for bhat, c.i. for fhat, a summary method, and a vcov method for this.

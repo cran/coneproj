@@ -1,12 +1,12 @@
-b509748dbd49bf975725d8be5d9abdf0 *ChangeLog
-d0902b32e2b79e5265d13a25e0864be1 *DESCRIPTION
-ac0121ef721efdcc39bab46b33c08f67 *NAMESPACE
-44232b9f3c03c4a18a9ec36ab4f76308 *R/coneproj.R
+c4024d0eba551813f9c208256a3a99b8 *ChangeLog
+a8927caa421128a27b55005be6ba6cb0 *DESCRIPTION
+d39061b3da69dfa56b31b474b8efc0c3 *NAMESPACE
+88585106f7322b87d5f824a679a26af2 *R/coneproj.R
 6c47022af5f00352baf82f954b97620c *data/FEV.rda
 6f81a786501f736f47a862ea5bf3c3ab *data/TwoDamat.rda
 4355ceabc8055a2a009d05e7486da496 *data/cubic.rda
 2ea3092f3e46ae944e976bab4aa7644d *data/feet.rda
-41ab0a56d6f9a0a8372229a3c2921097 *inst/CITATION
+6833a3487f1ac78d725efea201348ded *inst/CITATION
 81a14ec4b50bbef7eae9cb20d01f26ef *man/FEV.Rd
 5e6264ae028b289439d2009e8e431c22 *man/TwoDamat.Rd
 9a36a4bc2b7d1ba98fc58a936b3b0ee8 *man/check_irred.Rd
@@ -24,7 +24,7 @@ c7f27edaf1a9fdbeb82cad39bf9bf5f6 *man/incr.Rd
 7aeafff7d0731cd4b2c659c1cb3ec7c0 *man/incr.conc.Rd
 7d88210d7edbc7a789c477e65ea71f46 *man/incr.conv.Rd
 4e96536e9bd3a4088cb7369b645dfca2 *man/qprog.Rd
-b464c7c409832a19d30244e44a8d0f50 *man/shapereg.Rd
+326ea1bd9432b8205a94bea7ab6e5fa4 *man/shapereg.Rd
 489b262d4f81136a32f0bb09936fe53e *src/Makevars
 a2762b0003a9dd97f0904dc84fb72563 *src/Makevars.win
 830ebd1ab28dc80e2598c67551727bcf *src/coneproj.cpp

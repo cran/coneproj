@@ -312,6 +312,59 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
   bval <- (sse0 - sse1) / sse0
   g <- qr(atil)
   dim0 <- m - g$rank
+  #-----------------------------------------------------------------
+  #new: mixture variance-covariance matrix added in 2023; start
+  #-----------------------------------------------------------------
+  sighat <- sse1 / (n - ans$df)
+  sdhat <- sighat^.5
+  k <- length(bhat)
+  mcovp <- matrix(0, nrow = k, ncol = k)
+  ik <- diag(k)
+  nsim <- 1e+3
+  for(isim in 1:nsim){
+    ysim <- xmat %*% bhat + rnorm(n, 0, sd = sdhat)
+    #zsim <- slinv%*%t(umat)%*%t(xmat)%*%ysim/sqrt(n)
+    if (!is.null(w)) {
+      zsim <- t(uinv) %*% t(xmat) %*% w %*% ysim
+    } else {
+      zsim <- t(uinv) %*% t(xmat) %*% ysim
+    }
+    asim <- coneA(zsim, atil)
+    if(length(asim$face) == 0){
+      mcovp <- mcovp + ik
+    } else if(length(asim$face) > 0){
+      aj = atil[asim$face, ]
+      if(length(aj) == k){aj = matrix(aj, nrow = 1)}
+      mcovp = mcovp + ik - t(aj) %*% solve(aj %*% t(aj)) %*% aj
+    }		
+  }
+  mcovp <- mcovp / nsim * sighat
+  #mcov <- umat%*%slinv%*%mcovp%*%slinv%*%t(umat)/n
+  mcov <- uinv %*% mcovp %*% t(uinv)
+  level <- .95
+  t.mult <- qt((1 - level)/2, df = (n - ans$df), lower.tail=FALSE)
+  pmc <- t.mult * sqrt(diag(mcov))
+  uppc.bhat <- bhat + pmc
+  lowc.bhat <- bhat - pmc
+  
+  #I add the following: c.i. for fhat
+  hl <- t.mult * sqrt(diag(xmat %*% mcov %*% t(xmat)))
+  uppc.fhat <- fhatc + hl
+  lowc.fhat <- fhatc - hl
+  
+  #I add the following: t tests for bhat
+  se.beta <- sqrt(diag(mcov))
+  tstat <- bhat / se.beta
+  if ((n - 1.5*ans$df) <= 0) {
+    pvals.beta <- 2 * (1 - pt(abs(tstat),  ans$df))
+    warning('Effective degrees of freedom is close to the number of observations! 
+            Inference about parametric covariates is not reliable!')
+  } else {
+    pvals.beta <- 2 * (1 - pt(abs(tstat),  n - 1.5*ans$df))
+  }
+  #-----------------------------------------------------------------
+  #new: mixture variance-covariance matrix added in 2023; end
+  #-----------------------------------------------------------------
   #find the p-value for E01 test
   if (test) {
     if (bval > sm) {
@@ -320,8 +373,8 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
         ys <- rnorm(n)
 #new: include weighted case: already checked w
         if (!is.null(w)) {
-	  z <- t(uinv) %*% t(xmat) %*% w %*% ys
-	} else {
+	        z <- t(uinv) %*% t(xmat) %*% w %*% ys
+	      } else {
           z <- t(uinv) %*% t(xmat) %*% ys
         }
         ans <- coneA(z, atil)
@@ -339,13 +392,30 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
       }
       pval <- 1 - pval
     } else {pval <- 1}
-    rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc, pval = pval, coefs = bhat)		
+    #rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc, pval = pval, coefs = bhat)
+    rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc, pval = pval, coefs = bhat,
+                 uppc.bhat = uppc.bhat, lowc.bhat = lowc.bhat, uppc.fhat = uppc.fhat, 
+                 lowc.fhat = lowc.fhat, acov = mcov, se.beta = se.beta, pvals.beta = pvals.beta, tstat = tstat)		
   } else {
-    rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc , coefs = bhat)			
+    #rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc , coefs = bhat)
+    rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc , coefs = bhat, 
+                 uppc.bhat = uppc.bhat, lowc.bhat = lowc.bhat, uppc.fhat = uppc.fhat, 
+                 lowc.fhat = lowc.fhat, acov = mcov, se.beta = se.beta, pvals.beta = pvals.beta, tstat = tstat)			
   }
   attr(rslt, "sub") <- "constreg"
-  class(rslt) <- "coneproj"	
+  #class(rslt) <- "coneproj"	
+  #new: add in 2023 
+  class(rslt) <- c("constreg", "coneproj")
   return (rslt)	
+}
+
+###################
+#new: add in 2023 #
+###################
+vcov.constreg <- function(object,...){
+  v <- object$acov
+  dimnames(v) = list(names(coef(object)), names(coef(object)))
+  return(v)
 }
 
 ############################
@@ -740,87 +810,102 @@ makedelta <- function(x, sh) {
 summary.coneproj <- function(object,...) {
   sub <- attributes(object)$sub
   if (sub == "shapereg") {
-	if (!is.null(object$coefs)) {
-		coefs <- object$coefs
-		se <- object$se.beta
-		tval <- coefs / se
-		pvalbeta <- object$pvals.beta
-		pval <- object$pval
-		n <- length(coefs)
-		sse0 <- object$SSE0
-		sse1 <- object$SSE1
-		zid <- object$zid
-		shape <- object$shape
-		#zid1 <- object$zid1 - 1 - length(shape)
-		#zid2 <- object$zid2 - 1 - length(shape)
-		zid1 <- object$zid1
-		zid2 <- object$zid2
-		tms <- object$tms
-		zmat <- object$xmat
-		is_param <- object$is_param
-		is_fac <- object$is_fac
-		vals <- object$vals
-		test <- object$test
-#new:
-		rslt1 <- rslt2 <- NULL
-		if (!is.null(pvalbeta)) {
-			rslt1 <- data.frame("Estimate" = round(coefs, 4), "StdErr" = round(se, 4), "t.value" = round(tval, 4), "p.value" = round(pvalbeta, 4))
-			rownames(rslt1)[1] <- "(Intercept)"
-			if (n > 1) {
-				lzid <- length(zid1)
-				for (i in 1:lzid) {
-					pos1 <- zid1[i]; pos2 <- zid2[i]
-					for (j in pos1:pos2) {
-						if (!is_param[i]) {
-							rownames(rslt1)[j + 1] <- paste(attributes(tms)$term.labels[zid[i] - 1], rownames(rslt1)[j + 1], sep = "")							
-						} else {
-							rownames(rslt1)[j + 1] <- paste(attributes(tms)$term.labels[zid[i] - 1], vals[j], sep = "")					
-						}	
-					}
-				}
-			}
-			rslt1 <- as.matrix(rslt1)
-		} 
-		if (!is.null(sse0) & !is.null(sse1)) {
-			#rslt2 <- cbind(SSE.Linear = sse0, SSE.Full = sse1)
-#new:
-			rslt2 <- data.frame("SSE.Linear" = sse0, "SSE.Full" = sse1)
-			if (test) {
-			      PVAL <- object$pval
-			      rslt2 <- cbind(rslt2, "P.value.f(t)" = PVAL)
-		        } 
-			rownames(rslt2)[1] <- ""
-#new:
-			if (!is.null(rslt1)) {
-				ans <- list(call = object$call, coefficients = rslt1, residuals = rslt2, zcoefs = coefs) 
-			} else {
-				ans <- list(call = object$call, residuals = rslt2, zcoefs = coefs) 
-			}
-			attr(ans, "sub") <- sub
-			if (!is.null(rslt1)) {
-				class(ans) <- "summary.coneproj"
-			}
-			ans
-		} else {
-			if (!is.null(rslt1)) {
-				ans <- list(call = object$call, coefficients = rslt1, zcoefs = coefs)
-			} else {
-				ans <- list(call = object$call, zcoefs = coefs)
-			}
-			attr(ans, "sub") <- sub
-			if (!is.null(rslt1)) {
-				class(ans) <- "summary.coneproj"
-			}			
-			ans
-		}
-	} else {
-		ans <- list(zcoefs = object$coefs)
-		attr(ans, "sub") <- sub
-		class(ans) <- "summary.coneproj"
-		ans
-	}
+  	if (!is.null(object$coefs)) {
+  		coefs <- object$coefs
+  		se <- object$se.beta
+  		tval <- coefs / se
+  		pvalbeta <- object$pvals.beta
+  		pval <- object$pval
+  		n <- length(coefs)
+  		sse0 <- object$SSE0
+  		sse1 <- object$SSE1
+  		zid <- object$zid
+  		shape <- object$shape
+  		#zid1 <- object$zid1 - 1 - length(shape)
+  		#zid2 <- object$zid2 - 1 - length(shape)
+  		zid1 <- object$zid1
+  		zid2 <- object$zid2
+  		tms <- object$tms
+  		zmat <- object$xmat
+  		is_param <- object$is_param
+  		is_fac <- object$is_fac
+  		vals <- object$vals
+  		test <- object$test
+  #new:
+  		rslt1 <- rslt2 <- NULL
+  		if (!is.null(pvalbeta)) {
+  			rslt1 <- data.frame("Estimate" = round(coefs, 4), "StdErr" = round(se, 4), "t.value" = round(tval, 4), "p.value" = round(pvalbeta, 4))
+  			rownames(rslt1)[1] <- "(Intercept)"
+  			if (n > 1) {
+  				lzid <- length(zid1)
+  				for (i in 1:lzid) {
+  					pos1 <- zid1[i]; pos2 <- zid2[i]
+  					for (j in pos1:pos2) {
+  						if (!is_param[i]) {
+  							rownames(rslt1)[j + 1] <- paste(attributes(tms)$term.labels[zid[i] - 1], rownames(rslt1)[j + 1], sep = "")							
+  						} else {
+  							rownames(rslt1)[j + 1] <- paste(attributes(tms)$term.labels[zid[i] - 1], vals[j], sep = "")					
+  						}	
+  					}
+  				}
+  			}
+  			rslt1 <- as.matrix(rslt1)
+  		} 
+  		if (!is.null(sse0) & !is.null(sse1)) {
+  			#rslt2 <- cbind(SSE.Linear = sse0, SSE.Full = sse1)
+  #new:
+  			rslt2 <- data.frame("SSE.Linear" = sse0, "SSE.Full" = sse1)
+  			if (test) {
+  			      PVAL <- object$pval
+  			      rslt2 <- cbind(rslt2, "P.value.f(t)" = PVAL)
+  		        } 
+  			rownames(rslt2)[1] <- ""
+  #new:
+  			if (!is.null(rslt1)) {
+  				ans <- list(call = object$call, coefficients = rslt1, residuals = rslt2, zcoefs = coefs) 
+  			} else {
+  				ans <- list(call = object$call, residuals = rslt2, zcoefs = coefs) 
+  			}
+  			attr(ans, "sub") <- sub
+  			if (!is.null(rslt1)) {
+  				class(ans) <- "summary.coneproj"
+  			}
+  			ans
+  		} else {
+  			if (!is.null(rslt1)) {
+  				ans <- list(call = object$call, coefficients = rslt1, zcoefs = coefs)
+  			} else {
+  				ans <- list(call = object$call, zcoefs = coefs)
+  			}
+  			attr(ans, "sub") <- sub
+  			if (!is.null(rslt1)) {
+  				class(ans) <- "summary.coneproj"
+  			}			
+  			ans
+  		}
+  	} else {
+  		ans <- list(zcoefs = object$coefs)
+  		attr(ans, "sub") <- sub
+  		class(ans) <- "summary.coneproj"
+  		ans
+  	}
+  } else if (sub == "constreg") {
+    #new: added in 2023
+    coefs <- object$coefs
+    se <- object$se.beta
+    tval <- object$tstat 
+    pvalbeta <- object$pvals.beta
+    rslt1 <- data.frame("Estimate" = round(coefs, 4), "StdErr" = round(se, 4), "t.value" = round(tval, 4), "p.value" = round(pvalbeta, 4))
+    rslt1 <- as.matrix(rslt1)
+    colnames(rslt1) <- c("Estimate", "Std.Err", "t value", "Pr(>t)")
+    #temp!
+    rownames(rslt1) <- paste0("x", 1:nrow(rslt1))
+    ans <- list(call = object$call, coefficients = rslt1,  zcoefs = coefs) 
+    attr(ans, "sub") <- sub
+    class(ans) <- "summary.coneproj"
+    ans
   } else {
-	ans <- list(coefs = object$coefs, fhat = fitted(object))
+	  ans <- list(coefs = object$coefs, fhat = fitted(object))
   	return (ans)
   }
 }
@@ -831,21 +916,26 @@ summary.coneproj <- function(object,...) {
 print.summary.coneproj <- function(x,...)
 {
   sub <- attributes(x)$sub
-  if (sub == "shapereg") {
-    cat("Call:\n")
-    print(x$call)
-    cat("\n")
+  if (sub %in% c("shapereg", "constreg")){
+    if (sub == "shapereg") {
+      cat("Call:\n")
+      print(x$call)
+      cat("\n")
+    }
     cat("Coefficients:")
     cat("\n")
+    op <- options(show.coef.Pvalues = FALSE)
     printCoefmat(x$coefficients, P.values = TRUE, has.Pvalue = TRUE)
     #cat("==============================================================", "\n")
     #cat("Call:\n")
     #print(x$call)
     #cat("\n")
-    cat("+--------------------------------------+\n")
-    cat("|         SSE.Linear vs SSE.Full       |\n")
-    cat("+--------------------------------------+\n")
-    printCoefmat(x$residuals, P.values = TRUE, has.Pvalue = TRUE)
+    if (sub == "shapereg") {
+      cat("+--------------------------------------+\n")
+      cat("|         SSE.Linear vs SSE.Full       |\n")
+      cat("+--------------------------------------+\n")
+      printCoefmat(x$residuals, P.values = TRUE, has.Pvalue = TRUE)
+    }
   } else {
    #print ("not shapereg!") 
     print (x)

@@ -8,7 +8,7 @@ shapereg(formula, data = NULL, weights = NULL, test = FALSE, nloop = 1e+4)
 }
 \arguments{
   \item{formula}{  A formula object which gives a symbolic description of the model to be fitted. It has the form "response ~ predictor". The response is a vector of length \eqn{n}.  A predictor can be a non-parametrically modelled variable with a shape restriction or a parametrically modelled unconstrained covariate. In terms of a non-parametrically modelled predictor, the user is supposed to indicate the relationship between \eqn{E(y)} and a predictor \eqn{t} in the following way:
-    \itemize{
+    \describe{
     \item{incr(t): }{\eqn{E(y)} is increasing in \eqn{t}. See \code{\link{incr}} for more details.}
     \item{decr(t): }{\eqn{E(y)} is decreasing in \eqn{t}.  See \code{\link{decr}} for more details.}
     \item{conc(t): }{\eqn{E(y)} is concave in \eqn{t}.  See \code{\link{conc}} for more details.}
