@@ -642,7 +642,7 @@ shapereg.fit <- function(y, t, shape, xmat = NULL, w = NULL, test = FALSE, nloop
   #find the p-value for E01 test 
   if (test) {
   #find the mixing parameters for the mixture-of-betas distribution for the E01 test statistic
-    nloop <- nloop
+    #nloop <- nloop
     #set.seed(123)
     mdist <- 0:m*0
     for (iloop in 1:nloop) {

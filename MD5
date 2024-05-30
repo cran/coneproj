@@ -1,7 +1,7 @@
-c4024d0eba551813f9c208256a3a99b8 *ChangeLog
-a8927caa421128a27b55005be6ba6cb0 *DESCRIPTION
+fa3bdd06c33901bb61f955ccbe411426 *ChangeLog
+71bc50bf063df0e6a35105169f287f09 *DESCRIPTION
 d39061b3da69dfa56b31b474b8efc0c3 *NAMESPACE
-88585106f7322b87d5f824a679a26af2 *R/coneproj.R
+7b95fe8e42097016888c14b3bae547bd *R/coneproj.R
 6c47022af5f00352baf82f954b97620c *data/FEV.rda
 6f81a786501f736f47a862ea5bf3c3ab *data/TwoDamat.rda
 4355ceabc8055a2a009d05e7486da496 *data/cubic.rda
@@ -27,5 +27,5 @@ c7f27edaf1a9fdbeb82cad39bf9bf5f6 *man/incr.Rd
 326ea1bd9432b8205a94bea7ab6e5fa4 *man/shapereg.Rd
 489b262d4f81136a32f0bb09936fe53e *src/Makevars
 a2762b0003a9dd97f0904dc84fb72563 *src/Makevars.win
-830ebd1ab28dc80e2598c67551727bcf *src/coneproj.cpp
+b5f73bb43dab2864b899fb0a0e0a7941 *src/coneproj.cpp
 07a182c158025ed5125d63a615a6cd37 *src/registerDynamicSymbol.c

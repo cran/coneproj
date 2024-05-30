@@ -67,7 +67,8 @@ BEGIN_RCPP
     int nrep = 0;
 //new:
     arma::mat xmat_use;
-    while((check==0) & (nrep<(n*n))){
+    while((check==0) & (nrep<(n))){
+    //while((check==0) & (nrep<(n*n))){
         nrep ++ ;
         arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
         indice = indice.elem(find(h == 1));
@@ -170,7 +171,7 @@ BEGIN_RCPP
         }
         obs.set_size(m + p);
         obs = arma::linspace(0, m + p - 1, m + p);
-        theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny);
+        theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny, arma::solve_opts::fast);
     } 
 
     arma::colvec b2 = sigma * (ny - theta) / n;
@@ -199,8 +200,9 @@ BEGIN_RCPP
 
         if(!nvmat.is_empty()){
            a.set_size(p, 1); 
-           a = solve(nvmat.t() * nvmat, nvmat.t() * ny);
-           theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny);
+           a = solve(nvmat.t() * nvmat, nvmat.t() * ny, arma::solve_opts::fast);
+           theta = nvmat * a;
+           // theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny, arma::solve_opts::fast);
         }
         arma::colvec avec(m + p); avec.fill(0);
         if(!nvmat.is_empty()){
@@ -213,7 +215,7 @@ BEGIN_RCPP
     //int upper = 1000;
    // while(check == 0 & nrep < (n * n)){
 //double sc = 0;
-   while((check==0) & (nrep<1e+6)){
+   while((check==0) & (nrep < (n))){
         nrep ++;
         //if(nrep > (n * n)){
           // throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));
@@ -226,7 +228,7 @@ BEGIN_RCPP
             xmat.row(k) = sigma.row(indice(k));
         }
  	//double sc = arma::norm(xmat * xmat.t(), 2);
-        a = solve(xmat * xmat.t(), xmat * ny);
+        a = solve(xmat * xmat.t(), xmat * ny, arma::solve_opts::fast);
 //new: 
        if (a.n_elem > p) {
             arma::colvec a_sub(a.n_elem - p);
@@ -268,7 +270,7 @@ BEGIN_RCPP
             check = 1;
        }
 //new: avoid the mismatch problem
-       if (nrep == 1e+6) {
+       if (nrep == 1e+3) {
             arma::colvec indiceEnd = arma::linspace(0, sigma.n_rows-1, sigma.n_rows); 
        	    indiceEnd = indiceEnd.elem(find(h == 1));
             arma::mat xmat(indiceEnd.n_elem, sigma.n_cols); xmat.fill(0);
@@ -276,7 +278,7 @@ BEGIN_RCPP
                 xmat.row(k) = sigma.row(indiceEnd(k));
             }
             //sc = norm(xmat * xmat.t(), 2);
-            a = solve(xmat * xmat.t(), xmat * ny);
+            a = solve(xmat * xmat.t(), xmat * ny, arma::solve_opts::fast);
             theta = xmat.t() * a;
        }
    }
@@ -327,6 +329,8 @@ BEGIN_RCPP
     if(constr){
         arma::colvec b_(nb.begin(), m, false);
         theta0 = solve(namat, b_);
+        //theta0 = solve(namat, b_, arma::solve_opts::fast);
+        //theta0 = pinv(namat, b_);
         nnc = nc - nq * theta0;
     } 
 
@@ -368,7 +372,8 @@ BEGIN_RCPP
     int nrep = 0;
 //new:
     arma::mat xmat_use;
-    while((check==0) & (nrep<(n*n))){
+    //while((check==0) & (nrep<(n*n))){
+    while((check==0) & (nrep<(n))){
         nrep ++ ;
        // if(nrep > (n * n)){
          //  throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));}
@@ -381,6 +386,8 @@ BEGIN_RCPP
         }
 
         arma:: colvec a = solve(xmat * xmat.t(), xmat * z);
+        //arma:: colvec a = solve(xmat * xmat.t(), xmat * z, arma::solve_opts::fast);
+        //arma:: colvec a = pinv(xmat * xmat.t(), xmat * z);
         arma:: colvec avec(m); avec.fill(0);
 
         if(min(a) < (-sm)){
@@ -406,7 +413,9 @@ BEGIN_RCPP
     }
 
     arma::colvec thetahat = solve(u, z - phi);
-
+    //arma::colvec thetahat = solve(u, z - phi, arma::solve_opts::fast);
+    //arma::colvec thetahat = pinv(u, z - phi);
+    
     if(constr){
         thetahat = thetahat + theta0;
     }
