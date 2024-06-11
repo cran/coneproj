@@ -103,9 +103,11 @@ BEGIN_RCPP
        xmat_use = xmat;
     }
 
+//new 2024: projection matrix on the polar cone
+    arma::mat pmat;
+    pmat = xmat_use.t() * solve(xmat_use * xmat_use.t(), xmat_use);
     //if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
-
-    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
+    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("pmat") = pmat, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
 
 END_RCPP
 }

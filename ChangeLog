@@ -21,5 +21,10 @@
 * add mixture variance-covariance matrix in constreg, c.i. for bhat, c.i. for fhat, a summary method, and a vcov method for this.
 
 1.18
-* change nrep to be 1e+3 in coneBCpp
+* change nrep to be n in coneBCpp, coneACpp, etc.
 * change solve to be solve(xmat * xmat.t(), xmat * ny, arma::solve_opts::fast)
+
+1.19
+* return pmat in coneA
+
+

@@ -6,7 +6,9 @@ coneA <- function(y, amat, w = NULL, face = NULL, msg = TRUE){
     stop("y must be a numeric vector of length >= 1 !")
   }
   if (!is.numeric(amat) | !is.matrix(amat)) {
-    stop("amat must be a numeric matrix !")
+  # if (!is.matrix(amat) & !is(amat, "sparseMatrix")){
+     stop("amat must be a numeric matrix !")
+  # stop("amat must be a matrix or a sparse matrix from the Matrix package!")
   }
   if (ncol(amat) != length(y)) {
     stop("the column number of amat must equal the length of y !")
@@ -65,7 +67,7 @@ coneA <- function(y, amat, w = NULL, face = NULL, msg = TRUE){
     }
   }
   face <- which(ans$h == 1)
-  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat, face = face)
+  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat, face = face, pmat = ans$pmat)
   attr(rslt, "sub") <- "coneA"
   class(rslt) <- "coneproj"
   return (rslt) 
