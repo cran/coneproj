@@ -27,4 +27,6 @@
 1.19
 * return pmat in coneA
 
-
+1.20
+* fix the error in the description of coneA: face is for polar cone.
+* not use arma::solve_opts::fast, which is not stable

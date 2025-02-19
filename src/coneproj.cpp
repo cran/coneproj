@@ -34,6 +34,7 @@ BEGIN_RCPP
     arma::mat namat(amat_.begin(), m, n, false);
     arma::colvec ny(y_.begin(), n, false);
     float sm = 1e-8;
+    //float sm = 1e-11;
     arma::colvec h(m); h.fill(0);
     arma::colvec obs = arma::linspace(0, m-1, m);
     int check = 0;
@@ -104,10 +105,10 @@ BEGIN_RCPP
     }
 
 //new 2024: projection matrix on the polar cone
-    arma::mat pmat;
-    pmat = xmat_use.t() * solve(xmat_use * xmat_use.t(), xmat_use);
+    //arma::mat pmat;
+    //pmat = xmat_use.t() * solve(xmat_use * xmat_use.t(), xmat_use);
     //if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
-    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("pmat") = pmat, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
+    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
 
 END_RCPP
 }
@@ -173,7 +174,7 @@ BEGIN_RCPP
         }
         obs.set_size(m + p);
         obs = arma::linspace(0, m + p - 1, m + p);
-        theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny, arma::solve_opts::fast);
+        theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny);
     } 
 
     arma::colvec b2 = sigma * (ny - theta) / n;
@@ -202,7 +203,7 @@ BEGIN_RCPP
 
         if(!nvmat.is_empty()){
            a.set_size(p, 1); 
-           a = solve(nvmat.t() * nvmat, nvmat.t() * ny, arma::solve_opts::fast);
+           a = solve(nvmat.t() * nvmat, nvmat.t() * ny);
            theta = nvmat * a;
            // theta = nvmat * solve(nvmat.t() * nvmat, nvmat.t() * ny, arma::solve_opts::fast);
         }
@@ -230,7 +231,15 @@ BEGIN_RCPP
             xmat.row(k) = sigma.row(indice(k));
         }
  	//double sc = arma::norm(xmat * xmat.t(), 2);
-        a = solve(xmat * xmat.t(), xmat * ny, arma::solve_opts::fast);
+//chatgpt idea
+ 	      //Environment base("package:base");
+        //Function options = base["options"];
+        //int old_warn = as<int>(options("warn"));
+        //options(Named("warn") = -1);  // Suppress warnings
+        
+        a = solve(xmat * xmat.t(), xmat * ny);
+        
+        //options(Named("warn") = old_warn); 
 //new: 
        if (a.n_elem > p) {
             arma::colvec a_sub(a.n_elem - p);
@@ -280,7 +289,14 @@ BEGIN_RCPP
                 xmat.row(k) = sigma.row(indiceEnd(k));
             }
             //sc = norm(xmat * xmat.t(), 2);
-            a = solve(xmat * xmat.t(), xmat * ny, arma::solve_opts::fast);
+            //Environment base("package:base");
+            //Function options = base["options"];
+            //int old_warn = as<int>(options("warn"));
+            //options(Named("warn") = -1);  // Suppress warnings
+            
+            a = solve(xmat * xmat.t(), xmat * ny);
+            
+            //options(Named("warn") = old_warn); 
             theta = xmat.t() * a;
        }
    }

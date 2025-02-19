@@ -67,7 +67,7 @@ coneA <- function(y, amat, w = NULL, face = NULL, msg = TRUE){
     }
   }
   face <- which(ans$h == 1)
-  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat, face = face, pmat = ans$pmat)
+  rslt <- list(df = ans$dim, thetahat = ans$thetahat, steps = ans$nrep, xmat = ans$xmat, face = face)
   attr(rslt, "sub") <- "coneA"
   class(rslt) <- "coneproj"
   return (rslt) 
@@ -289,6 +289,8 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
     z <- t(uinv) %*% t(xmat) %*% y
     ans <- coneA(z, atil)
   }
+  #new:
+  face <- ans$face
   bhat <- uinv %*% ans$thetahat	
   #get constrained fit
   fhatc <- xmat %*% bhat
@@ -397,12 +399,12 @@ constreg <- function(y, xmat, amat, w = NULL, test = FALSE, nloop = 1e+4) {
     #rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc, pval = pval, coefs = bhat)
     rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc, pval = pval, coefs = bhat,
                  uppc.bhat = uppc.bhat, lowc.bhat = lowc.bhat, uppc.fhat = uppc.fhat, 
-                 lowc.fhat = lowc.fhat, acov = mcov, se.beta = se.beta, pvals.beta = pvals.beta, tstat = tstat)		
+                 lowc.fhat = lowc.fhat, acov = mcov, se.beta = se.beta, pvals.beta = pvals.beta, tstat = tstat, face = face)		
   } else {
     #rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc , coefs = bhat)
     rslt <- list(constr.fit = fhatc, unconstr.fit = fhatuc , coefs = bhat, 
                  uppc.bhat = uppc.bhat, lowc.bhat = lowc.bhat, uppc.fhat = uppc.fhat, 
-                 lowc.fhat = lowc.fhat, acov = mcov, se.beta = se.beta, pvals.beta = pvals.beta, tstat = tstat)			
+                 lowc.fhat = lowc.fhat, acov = mcov, se.beta = se.beta, pvals.beta = pvals.beta, tstat = tstat, face = face)			
   }
   attr(rslt, "sub") <- "constreg"
   #class(rslt) <- "coneproj"	
