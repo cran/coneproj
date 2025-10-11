@@ -14,105 +14,122 @@
 
 using namespace Rcpp;
 
+arma::sp_mat importSparseMatrix(S4 mat) {
+  return Rcpp::as<arma::sp_mat>(mat);
+}
 
 // user includes
 
-
 // declarations
 extern "C" {
-SEXP coneACpp( SEXP y, SEXP amat, SEXP face) ;
+  SEXP coneACpp( SEXP y, SEXP amat, SEXP face) ;
 }
 
 // definition
 
 SEXP coneACpp( SEXP y, SEXP amat, SEXP face){
-BEGIN_RCPP
-
-    Rcpp::NumericVector y_(y);
-    Rcpp::NumericMatrix amat_(amat);
-    int n = y_.size(), m = amat_.nrow();
-    arma::mat namat(amat_.begin(), m, n, false);
-    arma::colvec ny(y_.begin(), n, false);
-    float sm = 1e-8;
-    //float sm = 1e-11;
-    arma::colvec h(m); h.fill(0);
-    arma::colvec obs = arma::linspace(0, m-1, m);
-    int check = 0;
-    arma::mat amat_in = namat;
-//new:
-    arma::colvec face_ = Rcpp::as<arma::colvec>(face);
-    int nf = face_.n_rows;    
-
-    for(int im = 0; im < m; im ++){
-        arma::mat nnamat = namat.row(im) * namat.row(im).t();
-        amat_in.row(im) = namat.row(im) / sqrt(nnamat(0,0));
-    } 
-
-    arma::mat delta = -amat_in;
-    arma::colvec b2 = delta * ny;
-    arma::colvec theta(n); theta.fill(0);
-
-    if(max(b2) > 2 * sm){
-        int i = min(obs.elem(find(b2 == max(b2))));
-        h(i) = 1;
-//new:
-        if(!face_.is_empty()) {
-            for (int i = 0; i < nf; i ++) {
-                int posi = face_(i) - 1;
-                h(posi) = 1;
-            }
-        }
-    }
-    else{check = 1;}
-
-    int nrep = 0;
-//new:
-    arma::mat xmat_use;
-    while((check==0) & (nrep<(n))){
-    //while((check==0) & (nrep<(n*n))){
-        nrep ++ ;
-        arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
-        indice = indice.elem(find(h == 1));
-        arma::mat xmat(indice.n_elem, delta.n_cols); xmat.fill(0);
+  BEGIN_RCPP
   
-        for(int k = 0; k < indice.n_elem; k ++){
-            xmat.row(k) = delta.row(indice(k));
-        }
-
-        arma::colvec a = solve(xmat * xmat.t(), xmat * ny);
-        arma::colvec avec(m); avec.fill(0);
-
-        if(min(a) < (-sm)){
-            avec.elem(find(h == 1)) = a;
-            int i = min(obs.elem(find(avec == min(avec))));
-            h(i) = 0;
-            check = 0;
-        }
-      
-        else{
-            check = 1;
-            theta = xmat.t() * a;
-            b2 = delta * (ny - theta)/n;
-
-            if(max(b2) > 2 * sm){
-                int  i = min(obs.elem(find(b2 == max(b2))));
-                h(i) = 1;
-                check = 0;
-            }
-        }
-//new:
-       xmat_use = xmat;
+  Rcpp::NumericVector y_(y);
+  //Rcpp::NumericMatrix amat_(amat);
+  int n = y_.size();
+  int m;
+  //int n = y_.size(), m = amat_.nrow();
+  //arma::mat namat(amat_.begin(), m, n, false);
+  
+  // Hybrid matrix handling for amat
+  arma::mat namat;
+  if (Rf_isS4(amat) && Rf_inherits(amat, "dgCMatrix")) {
+    Rcpp::S4 amat_s4(amat);
+    Rcpp::IntegerVector dims = amat_s4.slot("Dim");
+    arma::sp_mat sp_amat = Rcpp::as<arma::sp_mat>(amat_s4);
+    namat = arma::mat(sp_amat);  // convert to dense
+    m = dims[0];
+  } else {
+    Rcpp::NumericMatrix amat_mat(amat);
+    namat = arma::mat(amat_mat.begin(), amat_mat.nrow(), amat_mat.ncol(), false);
+    m = amat_mat.nrow();
+  }
+  
+  arma::colvec ny(y_.begin(), n, false);
+  //float sm = 1e-9;
+  float sm = 1e-11;
+  arma::colvec h(m); h.fill(0);
+  arma::colvec obs = arma::linspace(0, m-1, m);
+  int check = 0;
+  arma::mat amat_in = namat;
+  //new:
+  arma::colvec face_ = Rcpp::as<arma::colvec>(face);
+  int nf = face_.n_rows;    
+  
+  for(int im = 0; im < m; im ++){
+    //arma::mat nnamat = namat.row(im) * namat.row(im).t();
+    //amat_in.row(im) = namat.row(im) / sqrt(nnamat(0,0));
+    double rownorm = arma::norm(namat.row(im), 2);  // L2 norm of the row
+    amat_in.row(im) = namat.row(im) / rownorm;
+  } 
+  
+  arma::mat delta = -amat_in;
+  arma::colvec b2 = delta * ny;
+  arma::colvec theta(n); theta.fill(0);
+  
+  if(max(b2) > 2 * sm){
+    int i = min(obs.elem(find(b2 == max(b2))));
+    h(i) = 1;
+    //new:
+    if(!face_.is_empty()) {
+      for (int i = 0; i < nf; i ++) {
+        int posi = face_(i) - 1;
+        h(posi) = 1;
+      }
     }
-
-//new 2024: projection matrix on the polar cone
-    //arma::mat pmat;
-    //pmat = xmat_use.t() * solve(xmat_use * xmat_use.t(), xmat_use);
-    //if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
-    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
-
-END_RCPP
+  } else{check = 1;}
+  
+  int nrep = 0;
+  //new:
+  arma::mat xmat_use;
+  while((check==0) & (nrep<(10000))){
+  //while((check==0) & (nrep<(n*n))){
+    nrep ++ ;
+    arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
+    indice = indice.elem(find(h == 1));
+    arma::mat xmat(indice.n_elem, delta.n_cols); xmat.fill(0);
+    
+    for(int k = 0; k < indice.n_elem; k ++){
+      xmat.row(k) = delta.row(indice(k));
+    }
+    
+    arma::colvec a = solve(xmat * xmat.t(), xmat * ny);
+    arma::colvec avec(m); avec.fill(0);
+    
+    if(min(a) < (-sm)){
+      avec.elem(find(h == 1)) = a;
+      int i = min(obs.elem(find(avec == min(avec))));
+      h(i) = 0;
+      check = 0;
+    } else{
+      check = 1;
+      theta = xmat.t() * a;
+      b2 = delta * (ny - theta)/n;
+      
+      if(max(b2) > 2 * sm){
+        int  i = min(obs.elem(find(b2 == max(b2))));
+        h(i) = 1;
+        check = 0;
+      }
+    }
+    //new:
+    xmat_use = xmat;
+  }
+  
+  //new 2024: projection matrix on the polar cone
+  //arma::mat pmat;
+  //pmat = xmat_use.t() * solve(xmat_use * xmat_use.t(), xmat_use);
+  //if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in coneproj!Too many steps! Number of steps:" << nrep << std::endl;}
+  return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = ny - theta, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
+  
+  END_RCPP
 }
-
 
 // declarations
 extern "C" {
@@ -139,7 +156,8 @@ BEGIN_RCPP
     arma::colvec obs;
     arma::mat theta(n, 1);
 
-    float sm = 1e-8;
+    float sm = 1e-11;
+    //float sm = 1e-8;
 //new: test!
     //float sm = 1e-5;
     int check = 0;
@@ -216,9 +234,9 @@ BEGIN_RCPP
 //new: 
     //int upper = n*n - 1;
     //int upper = 1000;
-   // while(check == 0 & nrep < (n * n)){
+    while((check == 0) & (nrep < (n * n))){
 //double sc = 0;
-   while((check==0) & (nrep < (n))){
+   //while((check==0) & (nrep < (1000))){
         nrep ++;
         //if(nrep > (n * n)){
           // throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));
@@ -325,124 +343,151 @@ SEXP qprogCpp( SEXP q, SEXP c, SEXP amat, SEXP b, SEXP face) ;
 }
 
 // definition
-
 SEXP qprogCpp( SEXP q, SEXP c, SEXP amat, SEXP b, SEXP face){
-BEGIN_RCPP
-
-    Rcpp::NumericVector c_(c);
-    Rcpp::NumericMatrix q_(q);
-    Rcpp::NumericMatrix amat_(amat);
-    Rcpp::NumericVector nb(b);
-    int n = c_.size(), m = amat_.nrow();
-    arma::colvec nc(c_.begin(), n, false);
-    arma::mat namat(amat_.begin(), m, n, false);
-    arma::mat nq(q_.begin(), n, n, false);
-    bool constr = is_true(any( nb != 0 ));
-    arma::colvec theta0(n);
-    arma::colvec nnc(n);
-//new:
-    arma::colvec face_ = Rcpp::as<arma::colvec>(face);
-    int nf = face_.n_rows;
-    
-    if(constr){
-        arma::colvec b_(nb.begin(), m, false);
-        theta0 = solve(namat, b_);
-        //theta0 = solve(namat, b_, arma::solve_opts::fast);
-        //theta0 = pinv(namat, b_);
-        nnc = nc - nq * theta0;
-    } 
-
-    else{nnc = nc;}
-
-    arma::mat preu = chol(nq);
-    arma::mat u = trimatu(preu); 
-    arma::colvec z = inv(u).t() * nnc;
-    arma::mat atil = namat * inv(u);
-
-    float sm = 1e-8;
-    arma::colvec h(m); h.fill(0);
-    arma::colvec obs = arma::linspace(0, m-1, m);
-    int check = 0;
-
-    for(int im = 0; im < m; im ++){
-        arma::mat atilnorm = atil.row(im) * atil.row(im).t();
-        atil.row(im) = atil.row(im) / sqrt(atilnorm(0,0));
-    } 
-
-    arma::mat delta = -atil;
-    arma::colvec b2 = delta * z;
-    arma::colvec phi(n); phi.fill(0);
-
-    if(max(b2) > 2 * sm){
-        int i = min(obs.elem(find(b2 == max(b2))));
-        h(i) = 1;
-//new:
-        if(!face_.is_empty()) {
-            for (int i = 0; i < nf; i ++) {
-                int posi = face_(i) - 1;
-                h(posi) = 1;
-            }
-        }
-    }
-
-    else{check = 1;}
-
-    int nrep = 0;
-//new:
-    arma::mat xmat_use;
-    //while((check==0) & (nrep<(n*n))){
-    while((check==0) & (nrep<(n))){
-        nrep ++ ;
-       // if(nrep > (n * n)){
-         //  throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));}
-        arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
-        indice = indice.elem(find(h == 1));
-        arma::mat xmat(indice.n_elem, delta.n_cols); xmat.fill(0);
+  BEGIN_RCPP
   
-        for(int k = 0; k < indice.n_elem; k ++){
-        xmat.row(k) = delta.row(indice(k));
-        }
-
-        arma:: colvec a = solve(xmat * xmat.t(), xmat * z);
-        //arma:: colvec a = solve(xmat * xmat.t(), xmat * z, arma::solve_opts::fast);
-        //arma:: colvec a = pinv(xmat * xmat.t(), xmat * z);
-        arma:: colvec avec(m); avec.fill(0);
-
-        if(min(a) < (-sm)){
-            avec.elem(find(h == 1)) = a;
-            int i = min(obs.elem(find(avec == min(avec))));
-            h(i) = 0;
-            check = 0;
-        }
+  Rcpp::NumericVector c_(c);
+  // Rcpp::NumericMatrix q_(q);
+  // Rcpp::NumericMatrix amat_(amat);
+  
+  //new: to handle sparse matrices
+  Rcpp::NumericVector nb(b);
+  int n = c_.size();
+  int m; 
+  // int n = c_.size(), m = amat_.nrow();
+  arma::colvec nc(c_.begin(), n, false);
+  
+  //arma::mat namat(amat_.begin(), m, n, false); #comment out and replace with sparse code
+  //arma::mat nq(q_.begin(), n, n, false); #comment out and replace with sparse code
+  // Hybrid matrix handling for q
+  arma::mat nq;
+  if (Rf_isS4(q) && Rf_inherits(q, "dgCMatrix")) {
+    Rcpp::S4 q_s4(q);
+    arma::sp_mat sp_q = Rcpp::as<arma::sp_mat>(q_s4);
+    nq = arma::mat(sp_q);  // convert to dense
+  } else {
+    Rcpp::NumericMatrix q_mat(q);
+    nq = arma::mat(q_mat.begin(), n, n, false);
+  }
+  
+  // Hybrid matrix handling for amat
+  arma::mat namat;
+  if (Rf_isS4(amat) && Rf_inherits(amat, "dgCMatrix")) {
+    Rcpp::S4 amat_s4(amat);
+    Rcpp::IntegerVector dims = amat_s4.slot("Dim");
+    arma::sp_mat sp_amat = Rcpp::as<arma::sp_mat>(amat_s4);
+    namat = arma::mat(sp_amat);  // convert to dense
+    m = dims[0];
+  } else {
+    Rcpp::NumericMatrix amat_mat(amat);
+    namat = arma::mat(amat_mat.begin(), amat_mat.nrow(), amat_mat.ncol(), false);
+    m = amat_mat.nrow();
+  }
+  
+  bool constr = is_true(any( nb != 0 ));
+  arma::colvec theta0(n);
+  arma::colvec nnc(n);
+  //new:
+  arma::colvec face_ = Rcpp::as<arma::colvec>(face);
+  int nf = face_.n_rows;
+  
+  if(constr){
+    arma::colvec b_(nb.begin(), m, false);
+    theta0 = solve(namat, b_);
+    //theta0 = solve(namat, b_, arma::solve_opts::fast);
+    //theta0 = pinv(namat, b_);
+    nnc = nc - nq * theta0;
+  } else{nnc = nc;}
+  
+  arma::mat preu = chol(nq);
+  arma::mat u = trimatu(preu); 
+  arma::colvec z = inv(u).t() * nnc;
+  arma::mat atil = namat * inv(u);
+  
+  //float sm = 1e-12;
+  float sm = 1e-11;
+  //float sm = 1e-9;
+  arma::colvec h(m); h.fill(0);
+  arma::colvec obs = arma::linspace(0, m-1, m);
+  int check = 0;
+  
+  for(int im = 0; im < m; im ++){
+    //arma::mat atilnorm = atil.row(im) * atil.row(im).t();
+    //atil.row(im) = atil.row(im) / sqrt(atilnorm(0,0));
+    double rownorm = arma::norm(atil.row(im), 2);  // L2 norm of the row
+    atil.row(im) = atil.row(im) / rownorm;
+  } 
+  
+  arma::mat delta = -atil;
+  arma::colvec b2 = delta * z;
+  arma::colvec phi(n); phi.fill(0);
+  
+  if(max(b2) > 2 * sm){
+    int i = min(obs.elem(find(b2 == max(b2))));
+    h(i) = 1;
+    //new:
+    if(!face_.is_empty()) {
+      for (int i = 0; i < nf; i ++) {
+        int posi = face_(i) - 1;
+        h(posi) = 1;
+      }
+    }
+  } else{check = 1;}
+  
+  int nrep = 0;
+  //new:
+  arma::mat xmat_use;
+  //while((check==0) & (nrep<(n*n))){
+  while((check==0) & (nrep<(10000))){
+    nrep ++ ;
+    // if(nrep > (n * n)){
+    //  throw (Rcpp::exception("Fail to converge in coneproj! nrep > n^2 !"));}
+    arma::colvec indice = arma::linspace(0, delta.n_rows - 1, delta.n_rows);
+    indice = indice.elem(find(h == 1));
+    arma::mat xmat(indice.n_elem, delta.n_cols); xmat.fill(0);
+    
+    for(int k = 0; k < indice.n_elem; k ++){
+      xmat.row(k) = delta.row(indice(k));
+    }
+    
+    arma:: colvec a = solve(xmat * xmat.t(), xmat * z);
+    //arma:: colvec a = solve(xmat * xmat.t(), xmat * z, arma::solve_opts::fast);
+    //arma:: colvec a = pinv(xmat * xmat.t(), xmat * z);
+    arma:: colvec avec(m); avec.fill(0);
+    
+    if(min(a) < (-sm)){
+      avec.elem(find(h == 1)) = a;
+      int i = min(obs.elem(find(avec == min(avec))));
+      h(i) = 0;
+      check = 0;
+    } else {
+      check = 1;
+      phi = xmat.t() * a;
+      b2 = delta * (z - phi)/n;
       
-        else{
-            check = 1;
-            phi = xmat.t() * a;
-            b2 = delta * (z - phi)/n;
-    
-            if(max(b2) > 2 * sm){
-                int  i = min(obs.elem(find(b2 == max(b2))));
-                h(i) = 1;
-                check = 0;
-            }
-        }
-	//new:
-    	xmat_use = xmat;
+      if(max(b2) > 2 * sm){
+        int  i = min(obs.elem(find(b2 == max(b2))));
+        h(i) = 1;
+        check = 0;
+      }
     }
-
-    arma::colvec thetahat = solve(u, z - phi);
-    //arma::colvec thetahat = solve(u, z - phi, arma::solve_opts::fast);
-    //arma::colvec thetahat = pinv(u, z - phi);
-    
-    if(constr){
-        thetahat = thetahat + theta0;
-    }
-
-    // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in qprog!Too many steps! Number of steps:" << nrep << std::endl;}
-
-    return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = thetahat, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
-
-END_RCPP
+    //new:
+    xmat_use = xmat;
+  }
+  
+  arma::colvec thetahat = solve(u, z - phi);
+  //arma::colvec thetahat = solve(u, z - phi, arma::solve_opts::fast);
+  //arma::colvec thetahat = pinv(u, z - phi);
+  
+  if(constr){
+    thetahat = thetahat + theta0;
+  }
+  
+  // if(nrep > (n * n - 1)){Rcpp::Rcout << "Fail to converge in qprog!Too many steps! Number of steps:" << nrep << std::endl;}
+  
+  return wrap(Rcpp::List::create(Rcpp::Named("thetahat") = thetahat, Named("xmat") = xmat_use, Named("dim") = n - sum(h), Named("nrep") = nrep, Named("h") = h));
+  
+  END_RCPP
 }
 
 

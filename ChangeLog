@@ -30,3 +30,9 @@
 1.20
 * fix the error in the description of coneA: face is for polar cone.
 * not use arma::solve_opts::fast, which is not stable
+
+1.21
+* qprogCpp and coneACpp are changed s.t. they can take sparse matrices as inputs.
+
+1.22
+* change the precision number sm = 1e-8 back to be 1e-11 in the src file. 
