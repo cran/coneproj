@@ -5,8 +5,8 @@ coneA <- function(y, amat, w = NULL, face = NULL, msg = TRUE){
   if (!is.numeric(y) | length(y) == 0) {
     stop("y must be a numeric vector of length >= 1 !")
   }
-  #if (!is.numeric(amat) | !is.matrix(amat)) {
-  if (!is.matrix(amat) & !is(amat, "sparseMatrix")){
+  if (!is.numeric(amat) | !is.matrix(amat)) {
+  #if (!is.matrix(amat) & !is(amat, "sparseMatrix")){
      #stop("amat must be a numeric matrix !")
      stop("amat must be a matrix or a sparse matrix from the Matrix package!")
   }
