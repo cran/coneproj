@@ -156,10 +156,10 @@ BEGIN_RCPP
     arma::colvec obs;
     arma::mat theta(n, 1);
 
-    float sm = 1e-11;
+    //float sm = 1e-11;
     //float sm = 1e-8;
 //new: test!
-    //float sm = 1e-5;
+    float sm = 1e-5;
     int check = 0;
 
     arma::colvec scalar(m);

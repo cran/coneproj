@@ -2,8 +2,8 @@ Package: coneproj
 Type: Package
 Title: Primal or Dual Cone Projections with Routines for Constrained
         Regression
-Version: 1.22
-Date: 2025-11-15
+Version: 1.23
+Date: 2026-1-5
 Authors@R: c(
     person(c("Mary", "C."), "Meyer", email = "meyer@stat.colostate.edu", role = "aut"),
     person("Xiyue", "Liao", email = "xliao@sdsu.edu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-4508-9219")))
@@ -16,7 +16,7 @@ LinkingTo: RcppArmadillo, Rcpp
 NeedsCompilation: yes
 Suggests: stats, graphics, grDevices, utils
 Repository: CRAN
-Packaged: 2025-11-15 22:22:19 UTC; xliao
+Packaged: 2026-01-06 16:08:40 UTC; xliao
 Author: Mary C. Meyer [aut],
   Xiyue Liao [aut, cre] (ORCID: <https://orcid.org/0000-0002-4508-9219>)
-Date/Publication: 2025-11-16 06:10:02 UTC
+Date/Publication: 2026-01-09 09:30:38 UTC
